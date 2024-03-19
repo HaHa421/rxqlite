@@ -16,7 +16,7 @@ use crate::typ;
 use crate::Node;
 use crate::NodeId;
 use crate::sqlite_store::Request;
-use crate::TypeConfig;
+//use crate::TypeConfig;
 
 use rxqlite_common::{Message,MessageResponse,Value,Rows};
 
