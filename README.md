@@ -42,7 +42,7 @@
 
 <br />
 
-Right now , you need to compile rsqlited
+Right now , you need to compile rxsqlited
 
 Windows: you need to use the msvc toolchain (mingw build is broken due to https://github.com/rust-rocksdb/rust-rocksdb/issues/866)
 
