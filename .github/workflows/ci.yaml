@@ -34,10 +34,3 @@ jobs:
     - name: Build
       run: cargo build --release --verbose --target x86_64-pc-windows-msvc
 
-    - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            target/x86_64-pc-windows-msvc/release/rxqlited.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
