@@ -13,14 +13,14 @@ categories = ["database"]
 
 
 [features]
-default = [ ] # you need to explicitly specify the chrono feature when compiling #simple_chrono example
+default = [ "chrono" ] # you need to explicitly specify the chrono feature when compiling #simple_chrono example
 
 #any = ["sqlx-core/any"]
 #json = ["sqlx-core/json", "serde"]
 #offline = ["sqlx-core/offline", "serde"]
 #migrate = ["sqlx-core/migrate"]
 
-#chrono = ["dep:chrono" , "rqlite-ha421/chrono"]
+chrono = ["dep:chrono"]
 #regexp = ["dep:regex"]
 
 [dependencies]
