@@ -17,7 +17,7 @@ kill_all() {
       if ps | grep "${SERVICE}" ; then 
         ps | grep "${SERVICE}" | awk '{print $1}' | xargs kill
       fi
-      rm -r 127.0.0.1:*.db || echo "no db to clean"
+      rm -r data-* || echo "no db to clean"
     else
       SERVICE="rxqlited"
       if [ "$(uname)" = "Darwin" ]; then
@@ -134,100 +134,5 @@ echo
 rpc 21001/cluster/metrics
 sleep 1
 
-exit 0
-
-echo "Write data on leader"
-sleep 1
-echo
-rpc 21001/api/write '{"Set":{"key":"foo","value":"bar"}}'
-sleep 1
-echo "Data written"
-sleep 1
-
-echo "Read on every node, including the leader"
-sleep 1
-echo "Read from node 1"
-echo
-rpc 21001/api/read  '"foo"'
-echo "Read from node 2"
-echo
-rpc 21002/api/read  '"foo"'
-echo "Read from node 3"
-echo
-rpc 21003/api/read  '"foo"'
-
-echo "Kill Node 1"
-kill -9 $PID1
-sleep 1
-
-echo "Read from node 3"
-echo
-rpc 21003/api/read  '"foo"'
-sleep 1
 
 
-echo "Get metrics from node 2"
-sleep 1
-echo
-rpc 21002/cluster/metrics
-sleep 1
-
-echo "Write data on node 2"
-sleep 1
-echo
-rpc 21002/api/write '{"Set":{"key":"foo","value":"badger"}}'
-sleep 1
-echo "Data written"
-sleep 1
-
-echo "Write data on node 3"
-sleep 1
-echo
-rpc 21003/api/write '{"Set":{"key":"foo","value":"badger"}}'
-sleep 1
-echo "Data written"
-sleep 1
-
-
-echo "Get metrics from node 2"
-sleep 1
-echo
-rpc 21002/cluster/metrics
-sleep 1
-
-
-echo "Read from node 3"
-echo
-rpc 21003/api/read  '"foo"'
-sleep 1
-
-
-echo "Restart node 1"
-echo
-
-${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 2>&1 >> n1.log &
-sleep 1
-echo "Server 1 started"
-
-echo "Read from node 1"
-echo
-rpc 21001/api/read  '"foo"'
-sleep 1
-
-echo "Get metrics from node 1"
-sleep 1
-echo
-rpc 21001/cluster/metrics
-sleep 1
-
-
-
-echo "Killing all nodes in 3s..."
-sleep 1
-echo "Killing all nodes in 2s..."
-sleep 1
-echo "Killing all nodes in 1s..."
-sleep 1
-kill_all
-
-rm -r 127.0.0.1:*.db
