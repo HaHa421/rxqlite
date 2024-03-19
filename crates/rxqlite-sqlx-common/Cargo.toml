@@ -27,6 +27,7 @@ features = ["runtime-tokio-rustls" , "chrono"]
 version = "0.7"
 
 [features]
+default = [ "sqlite" ]
 sqlite = [ "sqlx/sqlite" ]
 
 [dev-dependencies]
