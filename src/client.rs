@@ -91,6 +91,95 @@ impl ExampleClient {
           }
         }
     }
+    pub async fn fetch_all(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RaftSqliteError> {
+        let req = Message::Fetch(query.into(),arguments);
+        let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
+          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+        match res {
+          Ok(res)=>{
+            match res.data {
+              Some(res)=>{
+                match res {
+                  MessageResponse::Rows(rows)=>{
+                    Ok(rows)
+                  }
+                  MessageResponse::Error(error)=>{
+                    Err(anyhow::anyhow!(error))
+                  }
+                }
+              }
+              _=> {
+                Ok(Rows::default())
+              }
+            }
+          }
+          Err(err)=>{
+            Err(anyhow::anyhow!(err))
+          }
+        }
+    }
+    pub async fn fetch_one(&self, query: &str,arguments: Vec<Value>) -> Result<rxqlite_common::Row, crate::RaftSqliteError> {
+        let req = Message::FetchOne(query.into(),arguments);
+        let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
+          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+        match res {
+          Ok(res)=>{
+            match res.data {
+              Some(res)=>{
+                match res {
+                  MessageResponse::Rows(mut rows)=>{
+                    if rows.len() >= 1 {
+                      Ok(rows.remove(0))
+                    } else {
+                      Err(anyhow::anyhow!("no row matching query"))
+                    }
+                  }
+                  MessageResponse::Error(error)=>{
+                    Err(anyhow::anyhow!(error))
+                  }
+                }
+              }
+              _=> {
+                Err(anyhow::anyhow!("no row matching query"))
+              }
+            }
+          }
+          Err(err)=>{
+            Err(anyhow::anyhow!(err))
+          }
+        }
+    }
+    pub async fn fetch_optional(&self, query: &str,arguments: Vec<Value>) -> Result<Option<rxqlite_common::Row>, crate::RaftSqliteError> {
+        let req = Message::FetchOptional(query.into(),arguments);
+        let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
+          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+        match res {
+          Ok(res)=>{
+            match res.data {
+              Some(res)=>{
+                match res {
+                  MessageResponse::Rows(mut rows)=>{
+                    if rows.len() >= 1 {
+                      Ok(Some(rows.remove(0)))
+                    } else {
+                      Ok(None)
+                    }
+                  }
+                  MessageResponse::Error(error)=>{
+                    Err(anyhow::anyhow!(error))
+                  }
+                }
+              }
+              _=> {
+                Ok(None)
+              }
+            }
+          }
+          Err(err)=>{
+            Err(anyhow::anyhow!(err))
+          }
+        }
+    }
     /*
     pub async fn write(&self, req: &Request) -> Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>> {
         self.send_rpc_to_leader("api/write", Some(req)).await
