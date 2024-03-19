@@ -11,14 +11,15 @@ env:
   
 jobs:
   build:
-
+    strategy:
+        matrix:
+          toolchain:
+            - stable
+            
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Install Rust
-      run: |
-        choco install rust-msvc
-        echo "C:\ProgramData\chocolatey\lib\rust-msvc\tools\rust-windows-x86_64\bin" >> $GITHUB_PATH
+     
         
     - name: Install MSVC
       run: choco install visualstudio2022buildtools
@@ -31,6 +32,7 @@ jobs:
 
     
     - name: Build
+      run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       run: cargo build --release --verbose --target x86_64-pc-windows-msvc    
         
     - name: Upload Release Asset
