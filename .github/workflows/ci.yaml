@@ -33,9 +33,15 @@ jobs:
       
     - name: Build
       run: cargo build --release --verbose --target x86_64-pc-windows-msvc
-
-    - name: Release | Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: rxqlited.exe
-        path: ./target/x86_64-pc-windows-msvc/release/rxqlited.exe
+    
+    - name: Install 7zip
+      run: choco install 7zip
+      
+    - name: Zip the executable
+      run: 7z a ./rxqlited-win32.zip ./target/x86_64-pc-windows-msvc/release/rxqlited.exe
+    - name: Create release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+      run: |
+        gh release create v0.1.1 ./rxqlited-win32.zip
