@@ -12,3 +12,12 @@ Cargo.lock
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+**/*.bak
+
+# These are used by rxqlited for data storage (here up to five nodes)
+/data-1
+/data-2
+/data-3
+/data-4
+/data-5

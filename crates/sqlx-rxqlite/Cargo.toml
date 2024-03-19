@@ -1,0 +1,67 @@
+[package]
+name = "sqlx-rxqlite"
+#documentation = "https://docs.rs/sqlx"
+description = "rqlite driver implementation for SQLx. intended for use with sqlx; see the `sqlx` crate for details."
+homepage = "https://github.com/HaHa421/sqlx-rqlite"
+version = "0.1.3"
+edition = "2021"
+license = "Apache-2.0"
+authors = [ "ha421 <hha835773@gmail.com>" ]
+keywords = ["sqlx", "rqlite"]
+categories = ["database"]
+
+
+
+[features]
+default = [ ] # you need to explicitly specify the chrono feature when compiling #simple_chrono example
+
+#any = ["sqlx-core/any"]
+#json = ["sqlx-core/json", "serde"]
+#offline = ["sqlx-core/offline", "serde"]
+#migrate = ["sqlx-core/migrate"]
+
+#chrono = ["dep:chrono" , "rqlite-ha421/chrono"]
+#regexp = ["dep:regex"]
+
+[dependencies]
+futures-core = { version = "0.3.19", default-features = false }
+futures-channel = { version = "0.3.19", default-features = false, features = ["sink", "alloc", "std"] }
+# used by the SQLite worker thread to block on the async mutex that locks the database handle
+futures-executor = { version = "0.3.19" }
+futures-intrusive = "0.5.0"
+futures-util = { version = "0.3.19", default-features = false, features = ["alloc", "sink"] }
+
+chrono = { version = "0.4" , optional = true }
+#time = { workspace = true, optional = true }
+#uuid = { workspace = true, optional = true }
+
+url = { version = "2.2.2", default-features = false }
+percent-encoding = "2.1.0"
+
+flume = { version = "0.11.0", default-features = false, features = ["async"] }
+
+atoi = "2.0"
+
+log = "0.4.17"
+tracing = { version = "0.1.37", features = ["log"] }
+
+serde = { version = "1.0.145", features = ["derive"], optional = true }
+regex = { version = "1.5.5", optional = true }
+urlencoding = "2.1.3"
+
+rxqlite = { path = "../.." }
+
+[dependencies.sqlx-core]
+version = "0.7"
+
+[[example]]
+name = "simple"
+
+[[example]]
+name = "simple_chrono"
+required-features = [ "chrono" ]
+
+[dev-dependencies]
+sqlx = {  version = "0.7" , default-features = false, features = ["macros", "runtime-tokio", "tls-none"] }
+tokio = { version = "1", features = [ "full" ] }
+

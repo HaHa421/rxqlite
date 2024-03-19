@@ -1,0 +1,39 @@
+[package]
+name = "rxqlite-sqlx-common"
+version = "0.1.0"
+readme = "README.md"
+
+edition = "2021"
+authors = [
+    "drdr xp <drdr.xp@gmail.com>",
+    "Pedro Paulo de Amorim <pepa.amorim@gmail.com>",
+    "The Tremor Team",
+]
+categories = ["algorithms", "asynchronous", "data-structures"]
+description = "An example distributed key-value store built upon `openraft`."
+homepage = "https://github.com/datafuselabs/openraft"
+keywords = ["raft", "consensus"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/datafuselabs/openraft"
+
+
+[dependencies]
+rxqlite-common = { path = "../rxqlite-common" }
+sqlparser=  "*"
+
+[dependencies.sqlx]
+version = "0.7"
+features = ["runtime-tokio-rustls" , "chrono"]
+
+[dependencies.sqlx-core]
+version = "0.7"
+
+[features]
+sqlite = [ "sqlx/sqlite" ]
+
+[dev-dependencies]
+maplit = "1.0.2"
+tempfile = { version = "3.4.0" }
+
+[package.metadata.docs.rs]
+all-features = true
