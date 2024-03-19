@@ -1,6 +1,6 @@
 
-use crate::connection::RaftSqliteConnection;
-use crate::options::RaftSqliteConnectOptions;
+use crate::connection::RXQLiteConnection;
+use crate::options::RXQLiteConnectOptions;
 
 use futures_core::future::BoxFuture;
 use log::LevelFilter;
@@ -11,8 +11,8 @@ use std::str::FromStr;
 use std::time::Duration;
 use url::Url;
 
-impl ConnectOptions for RaftSqliteConnectOptions {
-    type Connection = RaftSqliteConnection;
+impl ConnectOptions for RXQLiteConnectOptions {
+    type Connection = RXQLiteConnection;
     // borrowed from sqlx-mysql
     fn from_url(url: &Url) -> Result<Self, Error> {
         let mut options = rxqlite::ConnectOptions::default();
@@ -76,7 +76,7 @@ impl ConnectOptions for RaftSqliteConnectOptions {
         Self::Connection: Sized,
     {
         Box::pin(async move {
-            let conn = RaftSqliteConnection::establish(self).await?;
+            let conn = RXQLiteConnection::establish(self).await?;
             /*
                         // After the connection is established, we initialize by configuring a few
                         // connection parameters
@@ -149,7 +149,7 @@ impl ConnectOptions for RaftSqliteConnectOptions {
     }
 }
 
-impl FromStr for RaftSqliteConnectOptions {
+impl FromStr for RXQLiteConnectOptions {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {

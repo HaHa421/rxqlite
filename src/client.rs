@@ -64,7 +64,7 @@ impl ExampleClient {
     pub async fn sql(&self, req: &Request) -> Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>> {
         self.send_rpc_to_leader("api/sql", Some(req)).await
     }
-    pub async fn execute(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RaftSqliteError> {
+    pub async fn execute(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RXQLiteError> {
         let req = Message::Execute(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
           =self.send_rpc_to_leader("api/sql", Some(&req)).await;
@@ -91,7 +91,7 @@ impl ExampleClient {
           }
         }
     }
-    pub async fn fetch_all(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RaftSqliteError> {
+    pub async fn fetch_all(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RXQLiteError> {
         let req = Message::Fetch(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
           =self.send_rpc_to_leader("api/sql", Some(&req)).await;
@@ -118,7 +118,7 @@ impl ExampleClient {
           }
         }
     }
-    pub async fn fetch_one(&self, query: &str,arguments: Vec<Value>) -> Result<rxqlite_common::Row, crate::RaftSqliteError> {
+    pub async fn fetch_one(&self, query: &str,arguments: Vec<Value>) -> Result<rxqlite_common::Row, crate::RXQLiteError> {
         let req = Message::FetchOne(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
           =self.send_rpc_to_leader("api/sql", Some(&req)).await;
@@ -149,7 +149,7 @@ impl ExampleClient {
           }
         }
     }
-    pub async fn fetch_optional(&self, query: &str,arguments: Vec<Value>) -> Result<Option<rxqlite_common::Row>, crate::RaftSqliteError> {
+    pub async fn fetch_optional(&self, query: &str,arguments: Vec<Value>) -> Result<Option<rxqlite_common::Row>, crate::RXQLiteError> {
         let req = Message::FetchOptional(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
           =self.send_rpc_to_leader("api/sql", Some(&req)).await;

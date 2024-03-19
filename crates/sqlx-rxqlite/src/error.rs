@@ -15,13 +15,13 @@ pub(crate) use sqlx_core::error::*;
 // https://www.sqlite.org/c3ref/errcode.html
 
 #[derive(Debug)]
-pub struct RaftSqliteError {
-    pub inner: rxqlite::RaftSqliteError,
+pub struct RXQLiteError {
+    pub inner: rxqlite::RXQLiteError,
 }
 
-impl RaftSqliteError {
+impl RXQLiteError {
     /*
-    pub(crate) fn new(inner: Box<rxqlite::RaftSqliteError>) -> Self {
+    pub(crate) fn new(inner: Box<rxqlite::RXQLiteError>) -> Self {
         Self {
             inner,
         }
@@ -29,7 +29,7 @@ impl RaftSqliteError {
     */
 }
 
-impl Display for RaftSqliteError {
+impl Display for RXQLiteError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         // We include the code as some produce ambiguous messages:
         // SQLITE_BUSY: "database is locked"
@@ -39,9 +39,9 @@ impl Display for RaftSqliteError {
     }
 }
 
-impl StdError for RaftSqliteError {}
+impl StdError for RXQLiteError {}
 
-impl DatabaseError for RaftSqliteError {
+impl DatabaseError for RXQLiteError {
     #[inline]
     fn message(&self) -> &str {
         self.inner.description()

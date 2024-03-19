@@ -1,9 +1,9 @@
-use crate::error::RaftSqliteError;
+use crate::error::RXQLiteError;
 use crate::type_info::DataType;
-use crate::RaftSqliteColumn;
+use crate::RXQLiteColumn;
 use crate::{
-    RXQLite, RaftSqliteConnection, RaftSqliteQueryResult, RaftSqliteRow, RaftSqliteStatement, RaftSqliteTypeInfo,
-    RaftSqliteValue,
+    RXQLite, RXQLiteConnection, RXQLiteQueryResult, RXQLiteRow, RXQLiteStatement, RXQLiteTypeInfo,
+    RXQLiteValue,
 };
 use futures_core::future::BoxFuture;
 use futures_core::stream::BoxStream;
@@ -15,13 +15,13 @@ use sqlx_core::ext::ustr::UStr;
 use sqlx_core::try_stream;
 use sqlx_core::Either;
 
-impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
+impl<'c> Executor<'c> for &'c mut RXQLiteConnection {
     type Database = RXQLite;
 
     fn fetch_many<'e, 'q: 'e, E: 'q>(
         self,
         mut query: E,
-    ) -> BoxStream<'e, Result<Either<RaftSqliteQueryResult, RaftSqliteRow>, Error>>
+    ) -> BoxStream<'e, Result<Either<RXQLiteQueryResult, RXQLiteRow>, Error>>
     where
         'c: 'e,
         E: Execute<'q, Self::Database>,
@@ -49,14 +49,14 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
                 let mut columns = Vec::with_capacity(size);
                 //let mut column_names = Vec::with_capacity(size);
                   for (i,value) in row.inner.into_iter().enumerate() {
-                    values.push(RaftSqliteValue::new(value,RaftSqliteTypeInfo(DataType::Null)));
-                    columns.push(RaftSqliteColumn{
+                    values.push(RXQLiteValue::new(value,RXQLiteTypeInfo(DataType::Null)));
+                    columns.push(RXQLiteColumn{
                       name : UStr::from(""),
                       ordinal: i,
-                      type_info: RaftSqliteTypeInfo(DataType::Null),
+                      type_info: RXQLiteTypeInfo(DataType::Null),
                     });
                   }
-                  let row=Either::Right(RaftSqliteRow {
+                  let row=Either::Right(RXQLiteRow {
                     values: values.into_boxed_slice(),
                     columns: columns.into(),
                     column_names : Default::default(),
@@ -66,7 +66,7 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
               Ok(())
             }
             Err(err)=> {
-              Err(RaftSqliteError{
+              Err(RXQLiteError{
                 inner: err,
               }.into())
             }
@@ -77,7 +77,7 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
     fn fetch_optional<'e, 'q: 'e, E: 'q>(
         self,
         mut query: E,
-    ) -> BoxFuture<'e, Result<Option<RaftSqliteRow>, Error>>
+    ) -> BoxFuture<'e, Result<Option<RXQLiteRow>, Error>>
     where
         'c: 'e,
         E: Execute<'q, Self::Database>,
@@ -105,14 +105,14 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
                 let mut columns = Vec::with_capacity(size);
                 //let mut column_names = Vec::with_capacity(size);
                   for (i,value) in row.inner.into_iter().enumerate() {
-                    values.push(RaftSqliteValue::new(value,RaftSqliteTypeInfo(DataType::Null)));
-                    columns.push(RaftSqliteColumn{
+                    values.push(RXQLiteValue::new(value,RXQLiteTypeInfo(DataType::Null)));
+                    columns.push(RXQLiteColumn{
                       name : UStr::from(""),
                       ordinal: i,
-                      type_info: RaftSqliteTypeInfo(DataType::Null),
+                      type_info: RXQLiteTypeInfo(DataType::Null),
                     });
                   }
-                  let row=RaftSqliteRow {
+                  let row=RXQLiteRow {
                     values: values.into_boxed_slice(),
                     columns: columns.into(),
                     column_names : Default::default(),
@@ -124,7 +124,7 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
               
             }
             Err(err)=> {
-              Err(RaftSqliteError{
+              Err(RXQLiteError{
                 inner: err,
               }.into())
             }
@@ -137,7 +137,7 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
     fn fetch_one<'e, 'q: 'e, E: 'q>(
         self,
         mut query: E,
-    ) -> BoxFuture<'e, Result<RaftSqliteRow, Error>>
+    ) -> BoxFuture<'e, Result<RXQLiteRow, Error>>
     where
         'c: 'e,
         E: Execute<'q, Self::Database>,
@@ -160,14 +160,14 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
               let mut columns = Vec::with_capacity(size);
               //let mut column_names = Vec::with_capacity(size);
               for (i,value) in row.inner.into_iter().enumerate() {
-                values.push(RaftSqliteValue::new(value,RaftSqliteTypeInfo(DataType::Null)));
-                columns.push(RaftSqliteColumn{
+                values.push(RXQLiteValue::new(value,RXQLiteTypeInfo(DataType::Null)));
+                columns.push(RXQLiteColumn{
                   name : UStr::from(""),
                   ordinal: i,
-                  type_info: RaftSqliteTypeInfo(DataType::Null),
+                  type_info: RXQLiteTypeInfo(DataType::Null),
                 });
               }
-              let row=RaftSqliteRow {
+              let row=RXQLiteRow {
                 values: values.into_boxed_slice(),
                 columns: columns.into(),
                 column_names : Default::default(),
@@ -175,7 +175,7 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
               Ok(row)
             }
             Err(err)=> {
-              Err(RaftSqliteError{
+              Err(RXQLiteError{
                 inner: err,
               }.into())
             }
@@ -186,8 +186,8 @@ impl<'c> Executor<'c> for &'c mut RaftSqliteConnection {
     fn prepare_with<'e, 'q: 'e>(
         self,
         _sql: &'q str,
-        _parameters: &[RaftSqliteTypeInfo],
-    ) -> BoxFuture<'e, Result<RaftSqliteStatement<'q>, Error>>
+        _parameters: &[RXQLiteTypeInfo],
+    ) -> BoxFuture<'e, Result<RXQLiteStatement<'q>, Error>>
     where
         'c: 'e,
     {

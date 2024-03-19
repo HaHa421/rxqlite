@@ -1,6 +1,6 @@
 use crate::column::ColumnIndex;
 use crate::error::Error;
-use crate::{RXQLite, RaftSqliteArguments, RaftSqliteColumn, RaftSqliteTypeInfo};
+use crate::{RXQLite, RXQLiteArguments, RXQLiteColumn, RXQLiteTypeInfo};
 use sqlx_core::ext::ustr::UStr;
 use sqlx_core::{Either, HashMap};
 use std::borrow::Cow;
@@ -18,18 +18,18 @@ pub(crate) use r#virtual::VirtualStatement;
 */
 #[derive(Debug, Clone)]
 #[allow(clippy::rc_buffer)]
-pub struct RaftSqliteStatement<'q> {
+pub struct RXQLiteStatement<'q> {
     pub(crate) sql: Cow<'q, str>,
     pub(crate) parameters: usize,
-    pub(crate) columns: Arc<Vec<RaftSqliteColumn>>,
+    pub(crate) columns: Arc<Vec<RXQLiteColumn>>,
     pub(crate) column_names: Arc<HashMap<UStr, usize>>,
 }
 
-impl<'q> Statement<'q> for RaftSqliteStatement<'q> {
+impl<'q> Statement<'q> for RXQLiteStatement<'q> {
     type Database = RXQLite;
 
-    fn to_owned(&self) -> RaftSqliteStatement<'static> {
-        RaftSqliteStatement::<'static> {
+    fn to_owned(&self) -> RXQLiteStatement<'static> {
+        RXQLiteStatement::<'static> {
             sql: Cow::Owned(self.sql.clone().into_owned()),
             parameters: self.parameters,
             columns: Arc::clone(&self.columns),
@@ -41,19 +41,19 @@ impl<'q> Statement<'q> for RaftSqliteStatement<'q> {
         &self.sql
     }
 
-    fn parameters(&self) -> Option<Either<&[RaftSqliteTypeInfo], usize>> {
+    fn parameters(&self) -> Option<Either<&[RXQLiteTypeInfo], usize>> {
         Some(Either::Right(self.parameters))
     }
 
-    fn columns(&self) -> &[RaftSqliteColumn] {
+    fn columns(&self) -> &[RXQLiteColumn] {
         &self.columns
     }
 
-    impl_statement_query!(RaftSqliteArguments);
+    impl_statement_query!(RXQLiteArguments);
 }
 
-impl ColumnIndex<RaftSqliteStatement<'_>> for &'_ str {
-    fn index(&self, statement: &RaftSqliteStatement<'_>) -> Result<usize, Error> {
+impl ColumnIndex<RXQLiteStatement<'_>> for &'_ str {
+    fn index(&self, statement: &RXQLiteStatement<'_>) -> Result<usize, Error> {
         statement
             .column_names
             .get(*self)
@@ -63,9 +63,9 @@ impl ColumnIndex<RaftSqliteStatement<'_>> for &'_ str {
 }
 
 // #[cfg(feature = "any")]
-// impl<'q> From<RaftSqliteStatement<'q>> for crate::any::AnyStatement<'q> {
+// impl<'q> From<RXQLiteStatement<'q>> for crate::any::AnyStatement<'q> {
 //     #[inline]
-//     fn from(statement: RaftSqliteStatement<'q>) -> Self {
+//     fn from(statement: RXQLiteStatement<'q>) -> Self {
 //         crate::any::AnyStatement::<'q> {
 //             columns: statement
 //                 .columns

@@ -1,8 +1,8 @@
 
-use crate::RaftSqliteConnectOptions;
+use crate::RXQLiteConnectOptions;
 use sqlx_core::Url;
 
-impl RaftSqliteConnectOptions {
+impl RXQLiteConnectOptions {
     pub(crate) fn build_url(&self) -> Url {
         let mut url = Url::parse(&format!(
             "rxqlite://{}:{}",

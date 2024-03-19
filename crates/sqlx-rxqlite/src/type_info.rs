@@ -31,15 +31,15 @@ pub(crate) enum DataType {
 /// Type information for a SQLite type.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "offline", derive(serde::Serialize, serde::Deserialize))]
-pub struct RaftSqliteTypeInfo(pub(crate) DataType);
+pub struct RXQLiteTypeInfo(pub(crate) DataType);
 
-impl Display for RaftSqliteTypeInfo {
+impl Display for RXQLiteTypeInfo {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.pad(self.name())
     }
 }
 
-impl TypeInfo for RaftSqliteTypeInfo {
+impl TypeInfo for RXQLiteTypeInfo {
     fn is_null(&self) -> bool {
         matches!(self.0, DataType::Null)
     }
@@ -95,9 +95,9 @@ impl FromStr for DataType {
 }
 
 // #[cfg(feature = "any")]
-// impl From<RaftSqliteTypeInfo> for crate::any::AnyTypeInfo {
+// impl From<RXQLiteTypeInfo> for crate::any::AnyTypeInfo {
 //     #[inline]
-//     fn from(ty: RaftSqliteTypeInfo) -> Self {
+//     fn from(ty: RXQLiteTypeInfo) -> Self {
 //         crate::any::AnyTypeInfo(crate::any::type_info::AnyTypeInfoKind::RXQLite(ty))
 //     }
 // }

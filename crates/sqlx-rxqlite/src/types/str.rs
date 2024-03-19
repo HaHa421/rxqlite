@@ -5,11 +5,11 @@ use crate::encode::{Encode, IsNull};
 use crate::error::BoxDynError;
 use crate::type_info::DataType;
 use crate::types::Type;
-use crate::{RXQLite, /*RaftSqliteArgumentValue, */ RaftSqliteTypeInfo, RaftSqliteValueRef};
+use crate::{RXQLite, /*RXQLiteArgumentValue, */ RXQLiteTypeInfo, RXQLiteValueRef};
 
 impl Type<RXQLite> for str {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Text)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Text)
     }
 }
 
@@ -22,7 +22,7 @@ impl<'q> Encode<'q, RXQLite> for &'q str {
 }
 /*
 impl<'r> Decode<'r, RXQLite> for &'r str {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         value.text().map(|x| {
           x.as_str()
         })
@@ -30,7 +30,7 @@ impl<'r> Decode<'r, RXQLite> for &'r str {
 }
 */
 impl Type<RXQLite> for Box<str> {
-    fn type_info() -> RaftSqliteTypeInfo {
+    fn type_info() -> RXQLiteTypeInfo {
         <&str as Type<RXQLite>>::type_info()
     }
 }
@@ -50,13 +50,13 @@ impl Encode<'_, RXQLite> for Box<str> {
 }
 
 impl Decode<'_, RXQLite> for Box<str> {
-    fn decode(value: RaftSqliteValueRef<'_>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'_>) -> Result<Self, BoxDynError> {
         value.text().map(Box::from)
     }
 }
 
 impl Type<RXQLite> for String {
-    fn type_info() -> RaftSqliteTypeInfo {
+    fn type_info() -> RXQLiteTypeInfo {
         <&str as Type<RXQLite>>::type_info()
     }
 }
@@ -76,17 +76,17 @@ impl<'q> Encode<'q, RXQLite> for String {
 }
 
 impl<'r> Decode<'r, RXQLite> for String {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         value.text()
     }
 }
 /*
 impl Type<RXQLite> for Cow<'_, str> {
-    fn type_info() -> RaftSqliteTypeInfo {
+    fn type_info() -> RXQLiteTypeInfo {
         <&str as Type<RXQLite>>::type_info()
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         <&str as Type<RXQLite>>::compatible(ty)
     }
 }
@@ -106,7 +106,7 @@ impl<'q> Encode<'q, RXQLite> for Cow<'q, str> {
 }
 
 impl<'r> Decode<'r, RXQLite> for Cow<'r, str> {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         value.text().map(Cow::Borrowed)
     }
 }

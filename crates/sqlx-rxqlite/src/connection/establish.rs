@@ -1,8 +1,8 @@
 use super::*;
 
-impl RaftSqliteConnection {
+impl RXQLiteConnection {
     pub async fn establish(
-        options: &RaftSqliteConnectOptions,
+        options: &RXQLiteConnectOptions,
     ) -> Result<Self, sqlx_core::error::Error> {
         let res = options.inner.connect().await;
         match res {
