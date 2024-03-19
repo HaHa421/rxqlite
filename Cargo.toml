@@ -27,13 +27,13 @@ path = "bin/main.rs"
 
 [[example]]
 name = "rxqlite-client"
-path = "bin/client.rs"
+path = "examples/client.rs"
 
 [dependencies]
 anyhow = "*"
 rxqlite-common = { version = "0.1" , path = "crates/rxqlite-common" }
 rxqlite-sqlx-common = { version = "0.1" , path = "crates/rxqlite-sqlx-common" , features = [ "sqlite" ] }
-openraft = { version = "0.9", features = ["serde"] }
+openraft = { version = "0.9", features = ["serde" , "storage-v2"] }
 
 
 
