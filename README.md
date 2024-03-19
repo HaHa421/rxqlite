@@ -52,7 +52,7 @@ Windows: you need to use the msvc toolchain (mingw build is broken due to https:
 
 <br />
 You will run rxqlited in cluster or in a single node mode, and since rxqlited uses the raft protocol, 
-clusters must contain an odd number of nodes (rxqlited as a single node forms cluster with only one node)
+clusters must contain an odd number of nodes (rxqlited as a single node forms a cluster with only one node)
 
 Starting a single node cluster on a local machine:
 using
@@ -60,9 +60,9 @@ using
 rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001
 ```
 
-rxqlited will listen on localhost:22001 for api and cluster management requests
+rxqlited will listen on localhost:22001 for api and cluster management requests.
 
-On first cluster run,the leader needs to be initiated as follow:
+On first cluster run, the leader needs to be initiated as follow:
 
 ```bash
 curl http://localhost:21001/cluster/init -H "Content-Type: application/json" -d '{}'
@@ -90,7 +90,7 @@ rxqlited --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003
 will start three instances of rxqlited.
 
 On first cluster run , we need to initialize the cluster:
-we then init as above the leader:
+we first init the leader as above:
 ```bash
 curl http://localhost:21001/cluster/init -H "Content-Type: application/json" -d '{}'
 ```
@@ -104,30 +104,30 @@ curl http://localhost:21001/cluster/add-learner -H "Content-Type: application/js
 
 ```
 
-We then change the cluster membership from one node (node 1) to three nodes using
+We then change the cluster membership from one node (node 1) to three nodes using:
 
 ```bash
 curl http://localhost:21001/cluster/change-membership -H "Content-Type: application/json" -d '[1, 2, 3]'
 
 ```
-After a few seconds, we can check the cluster metrics using 
+After a few seconds, we can check the cluster metrics using:
 
 ```bash
 curl http://localhost:21001/cluster/metrics
 ```
 
-and check that the cluster contais 3 nodes (membership : [1,2,3])
+and check that the cluster contais 3 nodes (membership : [1,2,3]).
 
 
 we are now done with cluster first run initialisation.
 
-any subsequent cluster run don't need to go through cluster initialisation step.
+any subsequent cluster runs don't need to go through cluster initialisation step.
 
 for further information on openraft you can check: https://github.com/datafuselabs/openraft
 
 the client example shows a basic usage of the api using rust.
 
-Furthermore, an sqlx driver is available from https://github.com/HaHa421/rxqlite/crates/sqlx-rxqlite 
+Furthermore, an sqlx driver is available from https://github.com/HaHa421/rxqlite/tree/main/crates/sqlx-rxqlite 
 to ease the use of rxqlite using sqlx (https://github.com/launchbadge/sqlx)
 
 
