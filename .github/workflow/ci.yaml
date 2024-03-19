@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ openraft-0.9 ]
+  pull_request:
+    branches: [ openraft-0.9 ]
+
+env:
+  CARGO_TERM_COLOR: always
+  
+jobs:
+  build:
+
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Rust
+      run: |
+        choco install rust-msvc
+        echo "C:\ProgramData\chocolatey\lib\rust-msvc\tools\rust-windows-x86_64\bin" >> $GITHUB_PATH
+        
+    - name: Install MSVC
+      run: choco install visualstudio2022buildtools
+    
+    - name: Install Clang
+      run: choco install llvm
+    
+    - name: Add libclang to PATH
+      run: echo "C:/Program Files/LLVM/bin" >> $GITHUB_PATH
+
+    
+    - name: Build
+      run: cargo build --release --verbose --target x86_64-pc-windows-msvc    
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        asset_path: ./target/x86_64-pc-windows-msvc/release/rxqlited.exe
+        asset_name: rxqlited.exe
+        asset_content_type: application/octet-stream
+    
