@@ -31,8 +31,8 @@ path = "bin/client.rs"
 
 [dependencies]
 anyhow = "*"
-rxqlite-common = { path = "crates/rxqlite-common" }
-rxqlite-sqlx-common = { path = "crates/rxqlite-sqlx-common" , features = [ "sqlite" ] }
+rxqlite-common = { version = "0.1" , path = "crates/rxqlite-common" }
+rxqlite-sqlx-common = { version = "0.1" , path = "crates/rxqlite-sqlx-common" , features = [ "sqlite" ] }
 openraft = { version = "0.9", features = ["serde"] }
 
 
