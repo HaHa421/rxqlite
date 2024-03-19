@@ -63,15 +63,15 @@ Assuming an rxqlite node listens at "127.0.0.1:21001", a simple app would procee
 ```rust
 use futures_util::StreamExt;
 use sqlx::prelude::*;
-use sqlx_rxqlite::RaftSqlitePoolOptions;
+use sqlx_rxqlite::RXQLitePoolOptions;
 
 //#[async_std::main] // Requires the `attributes` feature of `async-std`
 #[tokio::main]
 // or #[actix_web::main]
 async fn main() -> Result<(), sqlx::Error> {
-  let pool = RaftSqlitePoolOptions::new()
+  let pool = RXQLitePoolOptions::new()
         //.max_connections(5)
-        .connect("rxqlite://localhost:4001")
+        .connect("rxqlite://localhost:21001")
         .await?;
   sqlx::query(
         "CREATE TABLE IF NOT EXISTS _sqlx_rxqlite_test_user_ (
