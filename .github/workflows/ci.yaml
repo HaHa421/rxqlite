@@ -38,4 +38,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: rxqlited.exe
-        path: ./target/x86_64-pc-windows-msvc/rxqlited.exe
+        path: ./target/x86_64-pc-windows-msvc/release/rxqlited.exe
