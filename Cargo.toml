@@ -33,8 +33,7 @@ path = "bin/client.rs"
 anyhow = "*"
 rxqlite-common = { path = "crates/rxqlite-common" }
 rxqlite-sqlx-common = { path = "crates/rxqlite-sqlx-common" , features = [ "sqlite" ] }
-#openraft = { path = "../openraft", features = ["serde"] }
-openraft = { path = "../tyew_rocket/repos/openraft/openraft", features = ["serde"] }
+openraft = { version = "0.9", features = ["serde"] }
 
 
 
@@ -42,8 +41,7 @@ tokio = { version = "1.35.1", features = ["full"] }
 byteorder = "1.4.3"
 clap = { version = "4.1.11", features = ["derive", "env"] }
 reqwest = { version = "0.11.9", default-features=false , features = ["json"] }
-#rocksdb = "0.20.1"
-rocksdb = { path = "../tyew_rocket/repos/rust-rocksdb" }
+rocksdb = "0.22"
 serde = { version = "1.0.114", features = ["derive"] }
 serde_json = "1.0.57"
 warp = "0.3"
