@@ -1,6 +1,6 @@
 [package]
 name = "rxqlite"
-version = "0.1.0"
+version = "0.2.0"
 readme = "README.md"
 
 edition = "2021"
@@ -33,7 +33,7 @@ path = "examples/client.rs"
 anyhow = "*"
 rxqlite-common = { version = "0.1" , path = "crates/rxqlite-common" }
 rxqlite-sqlx-common = { version = "0.1" , path = "crates/rxqlite-sqlx-common" , features = [ "sqlite" ] }
-openraft = { version = "0.9", features = ["serde" , "storage-v2"] }
+openraft = { version = "0.10", git = "https://github.com/datafuselabs/openraft/openraft" , features = ["serde"] }
 
 
 
