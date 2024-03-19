@@ -1,6 +1,6 @@
 [package]
 name = "rxqlite"
-version = "0.1.0"
+version = "0.1.1"
 readme = "README.md"
 
 edition = "2021"
@@ -9,10 +9,10 @@ authors = [
 ]
 categories = ["distributed", "database", "raft" , "sqlite" ]
 description = "A distributed sqlite database built upon `openraft` and `sqlite`."
-homepage = "https://github.com/HaHa421/raft-sqlite"
+homepage = "https://github.com/HaHa421/rxqlite"
 keywords = ["distributed", "sqlite"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/HaHa421/raft-sqlite"
+repository = "https://github.com/HaHa421/rxqlite"
 
 [workspace]
 members = [
