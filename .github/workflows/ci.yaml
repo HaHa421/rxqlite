@@ -32,9 +32,9 @@ jobs:
 
       
     - name: Build
-      run: cargo build --release --verbose --target x86_64-pc-windows-msvc    
-    
-    - name: 'Upload Artifact'
+      run: cargo build --release --verbose --target x86_64-pc-windows-msvc
+
+    - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: rxqlited.exe
