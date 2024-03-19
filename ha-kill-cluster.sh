@@ -13,13 +13,13 @@ fi
 kill_all() {
     
     if [ "_$OSTYPE" == "_msys" ] ; then
-      SERVICE="raft-sqlite-rocks"
+      SERVICE="rxqlited"
       if ps | grep "${SERVICE}" ; then 
         ps | grep "${SERVICE}" | awk '{print $1}' | xargs kill
       fi
       rm -r 127.0.0.1:*.db || echo "no db to clean"
     else
-      SERVICE="raft-sqlite-rocks"
+      SERVICE="rxqlited"
       if [ "$(uname)" = "Darwin" ]; then
           if pgrep -xq -- "${SERVICE}"; then
               pkill -f "${SERVICE}"
@@ -60,9 +60,9 @@ rpc() {
 
 export RUST_LOG=trace
 export RUST_BACKTRACE=full
-bin=./target/release/raft-sqlite-rocks${EXE_SUFFIX}
+bin=./target/release/rxqlited${EXE_SUFFIX}
 
-echo "Killing all running raft-sqlite-rocks and cleaning up old data"
+echo "Killing all running rxqlited and cleaning up old data"
 
 kill_all
 sleep 1
@@ -72,7 +72,7 @@ then
     rm -r 127.0.0.1:*.db || echo "no db to clean"
 fi
 
-echo "Start 3 uninitialized raft-sqlite-rocks servers..."
+echo "Start 3 uninitialized rxqlited servers..."
 
 ${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 2>&1 > n1.log &
 PID1=$!
