@@ -34,8 +34,10 @@ jobs:
     - name: Build
       run: cargo build --release --verbose --target x86_64-pc-windows-msvc
 
-    - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+    - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: rxqlited.exe
-          path: ./target/x86_64-pc-windows-msvc/release/rxqlited.exe
+          files: |
+            target/x86_64-pc-windows-msvc/release/rxqlited.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
