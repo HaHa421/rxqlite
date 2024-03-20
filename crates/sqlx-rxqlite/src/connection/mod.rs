@@ -8,26 +8,26 @@ pub(crate) use sqlx_core::connection::*;
 use sqlx_core::transaction::Transaction;
 
 use crate::error::Error;
-use crate::options::RaftSqliteConnectOptions;
+use crate::options::RXQLiteConnectOptions;
 use crate::RXQLite;
 
 mod establish;
 mod executor;
 
-pub struct RaftSqliteConnection {
+pub struct RXQLiteConnection {
     inner: rxqlite::Connection,
 }
 
-impl Debug for RaftSqliteConnection {
+impl Debug for RXQLiteConnection {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RaftSqliteConnection").finish()
+        f.debug_struct("RXQLiteConnection").finish()
     }
 }
 
-impl Connection for RaftSqliteConnection {
+impl Connection for RXQLiteConnection {
     type Database = RXQLite;
 
-    type Options = RaftSqliteConnectOptions;
+    type Options = RXQLiteConnectOptions;
 
     fn close(self) -> BoxFuture<'static, Result<(), Error>> {
         Box::pin(async move { Ok(()) })

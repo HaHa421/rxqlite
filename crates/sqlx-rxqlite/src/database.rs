@@ -4,9 +4,9 @@ pub(crate) use sqlx_core::database::{
 };
 
 use crate::{
-    connection::RaftSqliteConnection, /*RaftSqliteArgumentValue,*/ RaftSqliteArguments, RaftSqliteColumn,
-    /*RaftSqliteConnection, */ RaftSqliteQueryResult, RaftSqliteRow, RaftSqliteStatement,
-    RaftSqliteTransactionManager, RaftSqliteTypeInfo, RaftSqliteValue, RaftSqliteValueRef,
+    connection::RXQLiteConnection, /*RXQLiteArgumentValue,*/ RXQLiteArguments, RXQLiteColumn,
+    /*RXQLiteConnection, */ RXQLiteQueryResult, RXQLiteRow, RXQLiteStatement,
+    RXQLiteTransactionManager, RXQLiteTypeInfo, RXQLiteValue, RXQLiteValueRef,
 };
 
 /// RXQLite database driver.
@@ -14,19 +14,19 @@ use crate::{
 pub struct RXQLite;
 
 impl Database for RXQLite {
-    type Connection = RaftSqliteConnection;
+    type Connection = RXQLiteConnection;
 
-    type TransactionManager = RaftSqliteTransactionManager;
+    type TransactionManager = RXQLiteTransactionManager;
 
-    type Row = RaftSqliteRow;
+    type Row = RXQLiteRow;
 
-    type QueryResult = RaftSqliteQueryResult;
+    type QueryResult = RXQLiteQueryResult;
 
-    type Column = RaftSqliteColumn;
+    type Column = RXQLiteColumn;
 
-    type TypeInfo = RaftSqliteTypeInfo;
+    type TypeInfo = RXQLiteTypeInfo;
 
-    type Value = RaftSqliteValue;
+    type Value = RXQLiteValue;
 
     const NAME: &'static str = "RXQLite";
 
@@ -36,13 +36,13 @@ impl Database for RXQLite {
 impl<'r> HasValueRef<'r> for RXQLite {
     type Database = RXQLite;
 
-    type ValueRef = RaftSqliteValueRef<'r>;
+    type ValueRef = RXQLiteValueRef<'r>;
 }
 
 impl<'q> HasArguments<'q> for RXQLite {
     type Database = RXQLite;
 
-    type Arguments = RaftSqliteArguments;
+    type Arguments = RXQLiteArguments;
 
     type ArgumentBuffer = Vec<rxqlite::Value>;
 }
@@ -50,7 +50,7 @@ impl<'q> HasArguments<'q> for RXQLite {
 impl<'q> HasStatement<'q> for RXQLite {
     type Database = RXQLite;
 
-    type Statement = RaftSqliteStatement<'q>;
+    type Statement = RXQLiteStatement<'q>;
 }
 
 impl HasStatementCache for RXQLite {}

@@ -9,10 +9,10 @@ authors = [
 ]
 categories = ["distributed", "database", "raft" , "sqlite" ]
 description = "A distributed sqlite database built upon `openraft` and `sqlite`."
-homepage = "https://github.com/HaHa421/raft-sqlite"
+homepage = "https://github.com/HaHa421/rxqlite"
 keywords = ["distributed", "sqlite"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/HaHa421/raft-sqlite"
+repository = "https://github.com/HaHa421/rxqlite"
 
 [workspace]
 members = [
@@ -30,10 +30,10 @@ name = "rxqlite-client"
 path = "examples/client.rs"
 
 [dependencies]
-anyhow = "*"
+anyhow = "1"
 rxqlite-common = { version = "0.1" , path = "crates/rxqlite-common" }
 rxqlite-sqlx-common = { version = "0.1" , path = "crates/rxqlite-sqlx-common" , features = [ "sqlite" ] }
-openraft = { version = "0.10", git = "https://github.com/datafuselabs/openraft/openraft" , features = ["serde"] }
+openraft = { version = "0.10" , git = "https://github.com/datafuselabs/openraft", features = ["serde"] }
 
 
 
@@ -41,7 +41,7 @@ tokio = { version = "1.35.1", features = ["full"] }
 byteorder = "1.4.3"
 clap = { version = "4.1.11", features = ["derive", "env"] }
 reqwest = { version = "0.11.9", default-features=false , features = ["json"] }
-rocksdb = "0.22"
+rocksdb = { version = "0.22"  }
 serde = { version = "1.0.114", features = ["derive"] }
 serde_json = "1.0.57"
 warp = "0.3"

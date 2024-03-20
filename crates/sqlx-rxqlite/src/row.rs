@@ -9,12 +9,12 @@ use sqlx_core::row::Row;
 use sqlx_core::HashMap;
 
 //use crate::statement::StatementHandle;
-use crate::{RXQLite, RaftSqliteColumn, RaftSqliteValue, RaftSqliteValueRef};
+use crate::{RXQLite, RXQLiteColumn, RXQLiteValue, RXQLiteValueRef};
 
 /// Implementation of [`Row`] for SQLite.
-pub struct RaftSqliteRow {
-    pub(crate) values: Box<[RaftSqliteValue]>,
-    pub(crate) columns: Arc<Vec<RaftSqliteColumn>>,
+pub struct RXQLiteRow {
+    pub(crate) values: Box<[RXQLiteValue]>,
+    pub(crate) columns: Arc<Vec<RXQLiteColumn>>,
     pub(crate) column_names: Arc<HashMap<UStr, usize>>,
 }
 
@@ -24,14 +24,14 @@ pub struct RaftSqliteRow {
 // we block ourselves from doing that by only exposing
 // a set interface on [StatementHandle]
 
-//unsafe impl Send for RaftSqliteRow {}
-//unsafe impl Sync for RaftSqliteRow {}
+//unsafe impl Send for RXQLiteRow {}
+//unsafe impl Sync for RXQLiteRow {}
 
-impl RaftSqliteRow {
+impl RXQLiteRow {
     /*
     pub(crate) fn current(
         statement: &StatementHandle,
-        columns: &Arc<Vec<RaftSqliteColumn>>,
+        columns: &Arc<Vec<RXQLiteColumn>>,
         column_names: &Arc<HashMap<UStr, usize>>,
     ) -> Self {
         let size = statement.column_count();
@@ -41,7 +41,7 @@ impl RaftSqliteRow {
             values.push(unsafe {
                 let raw = statement.column_value(i);
 
-                RaftSqliteValue::new(raw, columns[i].type_info.clone())
+                RXQLiteValue::new(raw, columns[i].type_info.clone())
             });
         }
 
@@ -54,24 +54,24 @@ impl RaftSqliteRow {
     */
 }
 
-impl Row for RaftSqliteRow {
+impl Row for RXQLiteRow {
     type Database = RXQLite;
 
-    fn columns(&self) -> &[RaftSqliteColumn] {
+    fn columns(&self) -> &[RXQLiteColumn] {
         &self.columns
     }
 
-    fn try_get_raw<I>(&self, index: I) -> Result<RaftSqliteValueRef<'_>, Error>
+    fn try_get_raw<I>(&self, index: I) -> Result<RXQLiteValueRef<'_>, Error>
     where
         I: ColumnIndex<Self>,
     {
         let index = index.index(self)?;
-        Ok(RaftSqliteValueRef::value(&self.values[index]))
+        Ok(RXQLiteValueRef::value(&self.values[index]))
     }
 }
 
-impl ColumnIndex<RaftSqliteRow> for &'_ str {
-    fn index(&self, row: &RaftSqliteRow) -> Result<usize, Error> {
+impl ColumnIndex<RXQLiteRow> for &'_ str {
+    fn index(&self, row: &RXQLiteRow) -> Result<usize, Error> {
         row.column_names
             .get(*self)
             .ok_or_else(|| Error::ColumnNotFound((*self).into()))
@@ -80,9 +80,9 @@ impl ColumnIndex<RaftSqliteRow> for &'_ str {
 }
 
 // #[cfg(feature = "any")]
-// impl From<RaftSqliteRow> for crate::any::AnyRow {
+// impl From<RXQLiteRow> for crate::any::AnyRow {
 //     #[inline]
-//     fn from(row: RaftSqliteRow) -> Self {
+//     fn from(row: RXQLiteRow) -> Self {
 //         crate::any::AnyRow {
 //             columns: row.columns.iter().map(|col| col.clone().into()).collect(),
 //             kind: crate::any::row::AnyRowKind::RXQLite(row),

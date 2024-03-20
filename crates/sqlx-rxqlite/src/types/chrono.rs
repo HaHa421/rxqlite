@@ -8,7 +8,7 @@ use crate::{
     error::BoxDynError,
     type_info::DataType,
     types::Type,
-    RXQLite, /*RaftSqliteArgumentValue,*/ RaftSqliteTypeInfo, RaftSqliteValueRef,
+    RXQLite, /*RXQLiteArgumentValue,*/ RXQLiteTypeInfo, RXQLiteValueRef,
 };
 use chrono::FixedOffset;
 use chrono::{
@@ -16,21 +16,21 @@ use chrono::{
 };
 
 impl<Tz: TimeZone> Type<RXQLite> for DateTime<Tz> {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Datetime)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Datetime)
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         <NaiveDateTime as Type<RXQLite>>::compatible(ty)
     }
 }
 
 impl Type<RXQLite> for NaiveDateTime {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Datetime)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Datetime)
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         matches!(
             ty.0,
             DataType::Datetime | DataType::Text | DataType::Int64 | DataType::Int | DataType::Float
@@ -39,21 +39,21 @@ impl Type<RXQLite> for NaiveDateTime {
 }
 
 impl Type<RXQLite> for NaiveDate {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Date)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Date)
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         matches!(ty.0, DataType::Date | DataType::Text)
     }
 }
 
 impl Type<RXQLite> for NaiveTime {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Time)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Time)
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         matches!(ty.0, DataType::Time | DataType::Text)
     }
 }
@@ -86,24 +86,24 @@ impl Encode<'_, RXQLite> for NaiveTime {
 }
 
 impl<'r> Decode<'r, RXQLite> for DateTime<Utc> {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         Ok(Utc.from_utc_datetime(&decode_datetime(value)?.naive_utc()))
     }
 }
 
 impl<'r> Decode<'r, RXQLite> for DateTime<Local> {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         Ok(Local.from_utc_datetime(&decode_datetime(value)?.naive_utc()))
     }
 }
 
 impl<'r> Decode<'r, RXQLite> for DateTime<FixedOffset> {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         decode_datetime(value)
     }
 }
 
-fn decode_datetime(value: RaftSqliteValueRef<'_>) -> Result<DateTime<FixedOffset>, BoxDynError> {
+fn decode_datetime(value: RXQLiteValueRef<'_>) -> Result<DateTime<FixedOffset>, BoxDynError> {
     let dt = match value.type_info().0 {
         DataType::Null => decode_datetime_from_text(&value.text()?),
         DataType::Text => decode_datetime_from_text(&value.text()?),
@@ -172,19 +172,19 @@ fn decode_datetime_from_float(value: f64) -> Option<DateTime<FixedOffset>> {
 }
 
 impl<'r> Decode<'r, RXQLite> for NaiveDateTime {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         Ok(decode_datetime(value)?.naive_local())
     }
 }
 
 impl<'r> Decode<'r, RXQLite> for NaiveDate {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         Ok(NaiveDate::parse_from_str(&value.text()?, "%F")?)
     }
 }
 
 impl<'r> Decode<'r, RXQLite> for NaiveTime {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         let value = value.text()?;
 
         // Loop over common time patterns, inspired by Diesel

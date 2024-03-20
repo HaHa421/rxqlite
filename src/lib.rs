@@ -214,10 +214,10 @@ pub struct ConnectOptions {
   pub accept_invalid_cert: bool,
 }
 
-pub type RaftSqliteError = anyhow::Error;
+pub type RXQLiteError = anyhow::Error;
 
 impl ConnectOptions {
-  pub async fn connect(&self)->Result<client::ExampleClient,RaftSqliteError> {
+  pub async fn connect(&self)->Result<client::ExampleClient,RXQLiteError> {
     Ok(client::ExampleClient::with_options(self))
   }
 }

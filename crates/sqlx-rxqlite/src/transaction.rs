@@ -1,16 +1,16 @@
 use futures_core::future::BoxFuture;
 
-use crate::{RXQLite, RaftSqliteConnection};
+use crate::{RXQLite, RXQLiteConnection};
 use sqlx_core::error::Error;
 use sqlx_core::transaction::TransactionManager;
 
 /// Implementation of [`TransactionManager`] for SQLite.
-pub struct RaftSqliteTransactionManager;
+pub struct RXQLiteTransactionManager;
 
-impl TransactionManager for RaftSqliteTransactionManager {
+impl TransactionManager for RXQLiteTransactionManager {
     type Database = RXQLite;
 
-    fn begin(_conn: &mut RaftSqliteConnection) -> BoxFuture<'_, Result<(), Error>> {
+    fn begin(_conn: &mut RXQLiteConnection) -> BoxFuture<'_, Result<(), Error>> {
         Box::pin(async {
             Err(Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -19,7 +19,7 @@ impl TransactionManager for RaftSqliteTransactionManager {
         })
     }
 
-    fn commit(_conn: &mut RaftSqliteConnection) -> BoxFuture<'_, Result<(), Error>> {
+    fn commit(_conn: &mut RXQLiteConnection) -> BoxFuture<'_, Result<(), Error>> {
         Box::pin(async {
             Err(Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -28,7 +28,7 @@ impl TransactionManager for RaftSqliteTransactionManager {
         })
     }
 
-    fn rollback(_conn: &mut RaftSqliteConnection) -> BoxFuture<'_, Result<(), Error>> {
+    fn rollback(_conn: &mut RXQLiteConnection) -> BoxFuture<'_, Result<(), Error>> {
         Box::pin(async {
             Err(Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -37,7 +37,7 @@ impl TransactionManager for RaftSqliteTransactionManager {
         })
     }
 
-    fn start_rollback(_conn: &mut RaftSqliteConnection) {
+    fn start_rollback(_conn: &mut RXQLiteConnection) {
         //conn.worker.start_rollback().ok();
     }
 }

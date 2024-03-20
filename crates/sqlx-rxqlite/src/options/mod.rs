@@ -1,11 +1,11 @@
 
 
 #[derive(Debug, Clone)]
-pub struct RaftSqliteConnectOptions {
+pub struct RXQLiteConnectOptions {
     pub(crate) inner: rxqlite::ConnectOptions,
 }
 
-impl RaftSqliteConnectOptions {
+impl RXQLiteConnectOptions {
   pub fn leader_id(mut self, leader_id: u64) -> Self {
     self.inner.leader_id = leader_id;
     self

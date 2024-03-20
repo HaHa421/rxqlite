@@ -1,5 +1,5 @@
 
-use crate::{RXQLite, /*RaftSqliteArgumentValue, */ RaftSqliteTypeInfo, RaftSqliteValueRef};
+use crate::{RXQLite, /*RXQLiteArgumentValue, */ RXQLiteTypeInfo, RXQLiteValueRef};
 use sqlx_core::decode::Decode;
 use sqlx_core::encode::{Encode, IsNull};
 use sqlx_core::error::BoxDynError;
@@ -8,11 +8,11 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 impl<T> Type<RXQLite> for Text<T> {
-    fn type_info() -> RaftSqliteTypeInfo {
+    fn type_info() -> RXQLiteTypeInfo {
         <String as Type<RXQLite>>::type_info()
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         <String as Type<RXQLite>>::compatible(ty)
     }
 }
@@ -31,7 +31,7 @@ where
     T: FromStr,
     BoxDynError: From<<T as FromStr>::Err>,
 {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         //Ha better to decode &str
         let s: String = Decode::<RXQLite>::decode(value)?;
         Ok(Self(s.as_str().parse()?))

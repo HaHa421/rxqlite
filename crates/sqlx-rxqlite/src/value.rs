@@ -22,34 +22,34 @@ pub(crate) use sqlx_core::value::{Value, ValueRef};
 
 use crate::error::BoxDynError;
 //use crate::type_info::DataType;
-use crate::{/*Sqlite,*/ RaftSqliteTypeInfo};
+use crate::{/*Sqlite,*/ RXQLiteTypeInfo};
 
-enum RaftSqliteValueData<'r> {
-    Value(&'r RaftSqliteValue),
+enum RXQLiteValueData<'r> {
+    Value(&'r RXQLiteValue),
 }
 
-pub struct RaftSqliteValueRef<'r>(RaftSqliteValueData<'r>);
+pub struct RXQLiteValueRef<'r>(RXQLiteValueData<'r>);
 
-impl<'r> RaftSqliteValueRef<'r> {
-    pub(crate) fn value(value: &'r RaftSqliteValue) -> Self {
-        Self(RaftSqliteValueData::Value(value))
+impl<'r> RXQLiteValueRef<'r> {
+    pub(crate) fn value(value: &'r RXQLiteValue) -> Self {
+        Self(RXQLiteValueData::Value(value))
     }
 
     pub(super) fn int(&self) -> Result<i32, BoxDynError> {
         match self.0 {
-            RaftSqliteValueData::Value(v) => Ok(i32::from_value_ref(&v.handle)),
+            RXQLiteValueData::Value(v) => Ok(i32::from_value_ref(&v.handle)),
         }
     }
 
     pub(super) fn int64(&self) -> Result<i64, BoxDynError> {
         match self.0 {
-            RaftSqliteValueData::Value(v) => Ok(i64::from_value_ref(&v.handle)),
+            RXQLiteValueData::Value(v) => Ok(i64::from_value_ref(&v.handle)),
         }
     }
 
     pub(super) fn double(&self) -> Result<f64, BoxDynError> {
         match self.0 {
-            RaftSqliteValueData::Value(v) => Ok(f64::from_value_ref(&v.handle)),
+            RXQLiteValueData::Value(v) => Ok(f64::from_value_ref(&v.handle)),
         }
     }
     /*
@@ -59,49 +59,49 @@ impl<'r> RaftSqliteValueRef<'r> {
     */
     pub(super) fn text(&self) -> Result<String, BoxDynError> {
         match self.0 {
-            RaftSqliteValueData::Value(v) => Ok(String::from_value_ref(&v.handle)),
+            RXQLiteValueData::Value(v) => Ok(String::from_value_ref(&v.handle)),
         }
     }
 }
 
-impl<'r> ValueRef<'r> for RaftSqliteValueRef<'r> {
+impl<'r> ValueRef<'r> for RXQLiteValueRef<'r> {
     type Database = RXQLite;
 
-    fn to_owned(&self) -> RaftSqliteValue {
+    fn to_owned(&self) -> RXQLiteValue {
         match self.0 {
-            RaftSqliteValueData::Value(v) => v.clone(),
+            RXQLiteValueData::Value(v) => v.clone(),
         }
     }
 
-    fn type_info(&self) -> Cow<'_, RaftSqliteTypeInfo> {
+    fn type_info(&self) -> Cow<'_, RXQLiteTypeInfo> {
         match self.0 {
-            RaftSqliteValueData::Value(v) => v.type_info(),
+            RXQLiteValueData::Value(v) => v.type_info(),
         }
     }
 
     fn is_null(&self) -> bool {
         match self.0 {
-            RaftSqliteValueData::Value(v) => v.is_null(),
+            RXQLiteValueData::Value(v) => v.is_null(),
         }
     }
 }
 
 #[derive(Clone)]
-pub struct RaftSqliteValue {
+pub struct RXQLiteValue {
     pub(crate) handle: Arc<rxqlite::Value>,
-    pub(crate) type_info: RaftSqliteTypeInfo,
+    pub(crate) type_info: RXQLiteTypeInfo,
 }
 
 //pub(crate) struct ValueHandle(NonNull<sqlite3_value>);
 
-// SAFE: only protected value objects are stored in RaftSqliteValue
+// SAFE: only protected value objects are stored in RXQLiteValue
 /*
 unsafe impl Send for ValueHandle {}
 unsafe impl Sync for ValueHandle {}
 */
-impl RaftSqliteValue {
+impl RXQLiteValue {
     /*
-    pub(crate) unsafe fn new(value: *mut sqlite3_value, type_info: RaftSqliteTypeInfo) -> Self {
+    pub(crate) unsafe fn new(value: *mut sqlite3_value, type_info: RXQLiteTypeInfo) -> Self {
         debug_assert!(!value.is_null());
 
         Self {
@@ -112,20 +112,20 @@ impl RaftSqliteValue {
         }
     }
     */
-    pub(crate) fn new(value: rxqlite::Value, type_info: RaftSqliteTypeInfo) -> Self {
+    pub(crate) fn new(value: rxqlite::Value, type_info: RXQLiteTypeInfo) -> Self {
         Self {
             type_info,
             handle: Arc::new(value),
         }
     }
-    fn type_info_opt(&self) -> Option<RaftSqliteTypeInfo> {
+    fn type_info_opt(&self) -> Option<RXQLiteTypeInfo> {
         /*
         let dt = DataType::from_code(unsafe { sqlite3_value_type(self.handle.0.as_ptr()) });
 
         if let DataType::Null = dt {
             None
         } else {
-            Some(RaftSqliteTypeInfo(dt))
+            Some(RXQLiteTypeInfo(dt))
         }
         */
         Some(self.type_info.clone())
@@ -163,14 +163,14 @@ impl RaftSqliteValue {
     */
 }
 
-impl Value for RaftSqliteValue {
+impl Value for RXQLiteValue {
     type Database = RXQLite;
 
-    fn as_ref(&self) -> RaftSqliteValueRef<'_> {
-        RaftSqliteValueRef::value(self)
+    fn as_ref(&self) -> RXQLiteValueRef<'_> {
+        RXQLiteValueRef::value(self)
     }
 
-    fn type_info(&self) -> Cow<'_, RaftSqliteTypeInfo> {
+    fn type_info(&self) -> Cow<'_, RXQLiteTypeInfo> {
         self.type_info_opt()
             .map(Cow::Owned)
             .unwrap_or(Cow::Borrowed(&self.type_info))
@@ -192,9 +192,9 @@ impl Drop for ValueHandle {
 }
 */
 // #[cfg(feature = "any")]
-// impl<'r> From<RaftSqliteValueRef<'r>> for crate::any::AnyValueRef<'r> {
+// impl<'r> From<RXQLiteValueRef<'r>> for crate::any::AnyValueRef<'r> {
 //     #[inline]
-//     fn from(value: RaftSqliteValueRef<'r>) -> Self {
+//     fn from(value: RXQLiteValueRef<'r>) -> Self {
 //         crate::any::AnyValueRef {
 //             type_info: value.type_info().clone().into_owned().into(),
 //             kind: crate::any::value::AnyValueRefKind::RXQLite(value),
@@ -203,9 +203,9 @@ impl Drop for ValueHandle {
 // }
 //
 // #[cfg(feature = "any")]
-// impl From<RaftSqliteValue> for crate::any::AnyValue {
+// impl From<RXQLiteValue> for crate::any::AnyValue {
 //     #[inline]
-//     fn from(value: RaftSqliteValue) -> Self {
+//     fn from(value: RXQLiteValue) -> Self {
 //         crate::any::AnyValue {
 //             type_info: value.type_info().clone().into_owned().into(),
 //             kind: crate::any::value::AnyValueKind::RXQLite(value),

@@ -16,7 +16,7 @@ use crate::typ;
 use crate::Node;
 use crate::NodeId;
 use crate::sqlite_store::Request;
-//use crate::TypeConfig;
+use crate::TypeConfig;
 
 use rxqlite_common::{Message,MessageResponse,Value,Rows};
 
@@ -64,7 +64,7 @@ impl ExampleClient {
     pub async fn sql(&self, req: &Request) -> Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>> {
         self.send_rpc_to_leader("api/sql", Some(req)).await
     }
-    pub async fn execute(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RaftSqliteError> {
+    pub async fn execute(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RXQLiteError> {
         let req = Message::Execute(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
           =self.send_rpc_to_leader("api/sql", Some(&req)).await;
@@ -83,6 +83,95 @@ impl ExampleClient {
               }
               _=> {
                 Ok(Rows::default())
+              }
+            }
+          }
+          Err(err)=>{
+            Err(anyhow::anyhow!(err))
+          }
+        }
+    }
+    pub async fn fetch_all(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RXQLiteError> {
+        let req = Message::Fetch(query.into(),arguments);
+        let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
+          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+        match res {
+          Ok(res)=>{
+            match res.data {
+              Some(res)=>{
+                match res {
+                  MessageResponse::Rows(rows)=>{
+                    Ok(rows)
+                  }
+                  MessageResponse::Error(error)=>{
+                    Err(anyhow::anyhow!(error))
+                  }
+                }
+              }
+              _=> {
+                Ok(Rows::default())
+              }
+            }
+          }
+          Err(err)=>{
+            Err(anyhow::anyhow!(err))
+          }
+        }
+    }
+    pub async fn fetch_one(&self, query: &str,arguments: Vec<Value>) -> Result<rxqlite_common::Row, crate::RXQLiteError> {
+        let req = Message::FetchOne(query.into(),arguments);
+        let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
+          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+        match res {
+          Ok(res)=>{
+            match res.data {
+              Some(res)=>{
+                match res {
+                  MessageResponse::Rows(mut rows)=>{
+                    if rows.len() >= 1 {
+                      Ok(rows.remove(0))
+                    } else {
+                      Err(anyhow::anyhow!("no row matching query"))
+                    }
+                  }
+                  MessageResponse::Error(error)=>{
+                    Err(anyhow::anyhow!(error))
+                  }
+                }
+              }
+              _=> {
+                Err(anyhow::anyhow!("no row matching query"))
+              }
+            }
+          }
+          Err(err)=>{
+            Err(anyhow::anyhow!(err))
+          }
+        }
+    }
+    pub async fn fetch_optional(&self, query: &str,arguments: Vec<Value>) -> Result<Option<rxqlite_common::Row>, crate::RXQLiteError> {
+        let req = Message::FetchOptional(query.into(),arguments);
+        let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
+          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+        match res {
+          Ok(res)=>{
+            match res.data {
+              Some(res)=>{
+                match res {
+                  MessageResponse::Rows(mut rows)=>{
+                    if rows.len() >= 1 {
+                      Ok(Some(rows.remove(0)))
+                    } else {
+                      Ok(None)
+                    }
+                  }
+                  MessageResponse::Error(error)=>{
+                    Err(anyhow::anyhow!(error))
+                  }
+                }
+              }
+              _=> {
+                Ok(None)
               }
             }
           }
@@ -149,7 +238,7 @@ impl ExampleClient {
     /// Metrics contains various information about the cluster, such as current leader,
     /// membership config, replication status etc.
     /// See [`RaftMetrics`].
-    pub async fn metrics(&self) -> Result<RaftMetrics<NodeId, Node>, typ::RPCError> {
+    pub async fn metrics(&self) -> Result<RaftMetrics<TypeConfig>, typ::RPCError> {
         self.do_send_rpc_to_leader("cluster/metrics", None::<&()>).await
     }
 

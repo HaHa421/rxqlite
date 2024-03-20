@@ -2,7 +2,7 @@
 use crate::encode::{Encode, IsNull};
 //use crate::types::Type;
 //use crate::type_info::DataType;
-use crate::{RXQLite, RaftSqliteTypeInfo};
+use crate::{RXQLite, RXQLiteTypeInfo};
 //use crate::error::BoxDynError;
 
 pub(crate) use sqlx_core::arguments::*;
@@ -12,9 +12,9 @@ use sqlx_core::types::Type;
 //use rxqlite::types::ToJsonValue;
 /// Implementation of [`Arguments`] for MySQL.
 #[derive(Debug, Default, Clone)]
-pub struct RaftSqliteArguments {
+pub struct RXQLiteArguments {
     pub(crate) values: Vec<rxqlite::Value>,
-    pub(crate) types: Vec<RaftSqliteTypeInfo>,
+    pub(crate) types: Vec<RXQLiteTypeInfo>,
 }
 /*
 impl<'q> Encode<'q, RXQLite> for i8 {
@@ -25,7 +25,7 @@ impl<'q> Encode<'q, RXQLite> for i8 {
     }
 }
 */
-impl RaftSqliteArguments {
+impl RXQLiteArguments {
     pub(crate) fn add<'q, T>(&mut self, value: T)
     where
         T: Encode<'q, RXQLite> + Type<RXQLite>,
@@ -44,7 +44,7 @@ impl RaftSqliteArguments {
     }
 }
 
-impl<'q> Arguments<'q> for RaftSqliteArguments {
+impl<'q> Arguments<'q> for RXQLiteArguments {
     type Database = RXQLite;
 
     fn reserve(&mut self, len: usize, size: usize) {

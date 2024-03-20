@@ -4,11 +4,11 @@ use crate::encode::{Encode, IsNull};
 use crate::error::BoxDynError;
 use crate::type_info::DataType;
 use crate::types::Type;
-use crate::{RXQLite, /*SqliteArgumentValue,*/ RaftSqliteTypeInfo, RaftSqliteValueRef};
+use crate::{RXQLite, /*SqliteArgumentValue,*/ RXQLiteTypeInfo, RXQLiteValueRef};
 
 impl Type<RXQLite> for f32 {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Float)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Float)
     }
 }
 
@@ -21,14 +21,14 @@ impl<'q> Encode<'q, RXQLite> for f32 {
 }
 
 impl<'r> Decode<'r, RXQLite> for f32 {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<f32, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<f32, BoxDynError> {
         Ok(value.double()? as f32)
     }
 }
 
 impl Type<RXQLite> for f64 {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Float)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Float)
     }
 }
 
@@ -41,7 +41,7 @@ impl<'q> Encode<'q, RXQLite> for f64 {
 }
 
 impl<'r> Decode<'r, RXQLite> for f64 {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<f64, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<f64, BoxDynError> {
         Ok(value.double()?)
     }
 }

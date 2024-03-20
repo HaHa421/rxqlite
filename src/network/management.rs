@@ -10,7 +10,7 @@ use crate::app::App;
 use crate::Node;
 use crate::NodeId;
 
-//use crate::TypeConfig;
+use crate::TypeConfig;
 use serde::Deserialize;
 // --- Cluster management
 
@@ -53,7 +53,7 @@ pub async fn init(_: Empty, app: Arc<App>) -> Result<impl warp::Reply, std::conv
 /// Get the latest metrics of the cluster
 pub async fn metrics(app: Arc<App>) -> Result<impl warp::Reply, std::convert::Infallible> {
     let metrics = app.raft.metrics().borrow().clone();
-    let res: Result<RaftMetrics<NodeId, Node>, Infallible> = Ok(metrics);
+    let res: Result<RaftMetrics<TypeConfig>, Infallible> = Ok(metrics);
     Ok(reply::json(&res))
 }
 

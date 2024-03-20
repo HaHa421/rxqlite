@@ -3,7 +3,7 @@ name = "sqlx-rxqlite"
 #documentation = "https://docs.rs/sqlx"
 description = "rqlite driver implementation for SQLx. intended for use with sqlx; see the `sqlx` crate for details."
 homepage = "https://github.com/HaHa421/sqlx-rqlite"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 license = "Apache-2.0"
 authors = [ "ha421 <hha835773@gmail.com>" ]
@@ -13,14 +13,14 @@ categories = ["database"]
 
 
 [features]
-default = [ ] # you need to explicitly specify the chrono feature when compiling #simple_chrono example
+default = [ "chrono" ] # you need to explicitly specify the chrono feature when compiling #simple_chrono example
 
 #any = ["sqlx-core/any"]
 #json = ["sqlx-core/json", "serde"]
 #offline = ["sqlx-core/offline", "serde"]
 #migrate = ["sqlx-core/migrate"]
 
-#chrono = ["dep:chrono" , "rqlite-ha421/chrono"]
+chrono = ["dep:chrono"]
 #regexp = ["dep:regex"]
 
 [dependencies]
@@ -49,7 +49,7 @@ serde = { version = "1.0.145", features = ["derive"], optional = true }
 regex = { version = "1.5.5", optional = true }
 urlencoding = "2.1.3"
 
-rxqlite = { path = "../.." }
+rxqlite = { path = "../.." , version = "0.2" }
 
 [dependencies.sqlx-core]
 version = "0.7"

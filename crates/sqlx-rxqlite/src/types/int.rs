@@ -4,14 +4,14 @@ use crate::encode::{Encode, IsNull};
 use crate::error::BoxDynError;
 use crate::type_info::DataType;
 use crate::types::Type;
-use crate::{RXQLite, /*RaftSqliteArgumentValue,*/ RaftSqliteTypeInfo, RaftSqliteValueRef};
+use crate::{RXQLite, /*RXQLiteArgumentValue,*/ RXQLiteTypeInfo, RXQLiteValueRef};
 
 impl Type<RXQLite> for i8 {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Int)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Int)
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         matches!(ty.0, DataType::Int | DataType::Int64)
     }
 }
@@ -25,17 +25,17 @@ impl<'q> Encode<'q, RXQLite> for i8 {
 }
 
 impl<'r> Decode<'r, RXQLite> for i8 {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         Ok(value.int()?.try_into()?)
     }
 }
 
 impl Type<RXQLite> for i16 {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Int)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Int)
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         matches!(ty.0, DataType::Int | DataType::Int64)
     }
 }
@@ -49,17 +49,17 @@ impl<'q> Encode<'q, RXQLite> for i16 {
 }
 
 impl<'r> Decode<'r, RXQLite> for i16 {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         Ok(value.int()?.try_into()?)
     }
 }
 
 impl Type<RXQLite> for i32 {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Int)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Int)
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         matches!(ty.0, DataType::Int | DataType::Int64)
     }
 }
@@ -73,17 +73,17 @@ impl<'q> Encode<'q, RXQLite> for i32 {
 }
 
 impl<'r> Decode<'r, RXQLite> for i32 {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         Ok(value.int()?)
     }
 }
 
 impl Type<RXQLite> for i64 {
-    fn type_info() -> RaftSqliteTypeInfo {
-        RaftSqliteTypeInfo(DataType::Int64)
+    fn type_info() -> RXQLiteTypeInfo {
+        RXQLiteTypeInfo(DataType::Int64)
     }
 
-    fn compatible(ty: &RaftSqliteTypeInfo) -> bool {
+    fn compatible(ty: &RXQLiteTypeInfo) -> bool {
         matches!(ty.0, DataType::Int | DataType::Int64)
     }
 }
@@ -97,7 +97,7 @@ impl<'q> Encode<'q, RXQLite> for i64 {
 }
 
 impl<'r> Decode<'r, RXQLite> for i64 {
-    fn decode(value: RaftSqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+    fn decode(value: RXQLiteValueRef<'r>) -> Result<Self, BoxDynError> {
         Ok(value.int64()?)
     }
 }

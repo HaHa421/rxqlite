@@ -1,12 +1,12 @@
 use std::iter::{Extend, IntoIterator};
 
 #[derive(Debug, Default)]
-pub struct RaftSqliteQueryResult {
+pub struct RXQLiteQueryResult {
     pub(super) changes: u64,
     pub(super) last_insert_rowid: i64,
 }
 
-impl RaftSqliteQueryResult {
+impl RXQLiteQueryResult {
     pub fn rows_affected(&self) -> u64 {
         self.changes
     }
@@ -16,8 +16,8 @@ impl RaftSqliteQueryResult {
     }
 }
 
-impl Extend<RaftSqliteQueryResult> for RaftSqliteQueryResult {
-    fn extend<T: IntoIterator<Item = RaftSqliteQueryResult>>(&mut self, iter: T) {
+impl Extend<RXQLiteQueryResult> for RXQLiteQueryResult {
+    fn extend<T: IntoIterator<Item = RXQLiteQueryResult>>(&mut self, iter: T) {
         for elem in iter {
             self.changes += elem.changes;
             self.last_insert_rowid = elem.last_insert_rowid;

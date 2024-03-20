@@ -9,42 +9,42 @@ pub(crate) use sqlx_core::driver_prelude::*;
 
 pub mod error;
 pub mod type_info;
-use type_info::RaftSqliteTypeInfo;
+use type_info::RXQLiteTypeInfo;
 
 mod types;
 
 mod options;
-pub use options::RaftSqliteConnectOptions;
+pub use options::RXQLiteConnectOptions;
 pub mod connection;
-use connection::RaftSqliteConnection;
+use connection::RXQLiteConnection;
 pub mod arguments;
-use arguments::RaftSqliteArguments;
+use arguments::RXQLiteArguments;
 pub mod column;
-use column::RaftSqliteColumn;
+use column::RXQLiteColumn;
 
 pub mod statement;
-use statement::RaftSqliteStatement;
+use statement::RXQLiteStatement;
 
 pub mod row;
-use row::RaftSqliteRow;
+use row::RXQLiteRow;
 
 pub mod query_result;
-use query_result::RaftSqliteQueryResult;
+use query_result::RXQLiteQueryResult;
 
 pub mod transaction;
-use transaction::RaftSqliteTransactionManager;
+use transaction::RXQLiteTransactionManager;
 pub mod database;
 use database::RXQLite;
 
 pub mod value;
 use value::*;
 
-impl_into_arguments_for_arguments!(RaftSqliteArguments);
-impl_acquire!(RXQLite, RaftSqliteConnection);
-impl_column_index_for_row!(RaftSqliteRow);
-impl_column_index_for_statement!(RaftSqliteStatement);
+impl_into_arguments_for_arguments!(RXQLiteArguments);
+impl_acquire!(RXQLite, RXQLiteConnection);
+impl_column_index_for_row!(RXQLiteRow);
+impl_column_index_for_statement!(RXQLiteStatement);
 
-pub type RaftSqlitePool = crate::pool::Pool<RXQLite>;
+pub type RXQLitePool = crate::pool::Pool<RXQLite>;
 
 /// An alias for [`PoolOptions`][crate::pool::PoolOptions], specialized for SQLite.
-pub type RaftSqlitePoolOptions = crate::pool::PoolOptions<RXQLite>;
+pub type RXQLitePoolOptions = crate::pool::PoolOptions<RXQLite>;
