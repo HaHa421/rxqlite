@@ -25,10 +25,10 @@ jobs:
     
     - name: Define Binary Name(Windows)
       if: matrix.os == 'windows-latest'
-      run: echo "BINARY_NAME=test-github-release" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      run: echo "BINARY_NAME=rxqlited" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Define Binary Name(Ubuntu)  
       if: matrix.os == 'ubuntu-latest'
-      run: echo "BINARY_NAME=test-github-release" >> $GITHUB_ENV
+      run: echo "BINARY_NAME=rxqlited" >> $GITHUB_ENV
       
     - run: git fetch --no-tags --prune --depth=1 origin +refs/tags/*:refs/tags/*
     - name: Get latest tag (Windows)
@@ -132,10 +132,10 @@ jobs:
 
     - name: Define Binary Name(Windows)
       if: runner.os == 'Windows'
-      run: echo "BINARY_NAME=test-github-release" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      run: echo "BINARY_NAME=rxqlited" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Define Binary Name(Ubuntu)  
       if: runner.os == 'Linux'
-      run: echo "BINARY_NAME=test-github-release" >> $GITHUB_ENV
+      run: echo "BINARY_NAME=rxqlited" >> $GITHUB_ENV
 
     - run: git fetch --no-tags --prune --depth=1 origin +refs/tags/*:refs/tags/*
       
