@@ -17,14 +17,12 @@ kill_all() {
       if ps | grep "${SERVICE}" ; then 
         ps | grep "${SERVICE}" | awk '{print $1}' | xargs kill
       fi
-      rm -r 127.0.0.1:*.db || echo "no db to clean"
     else
       SERVICE="rxqlited"
       if [ "$(uname)" = "Darwin" ]; then
           if pgrep -xq -- "${SERVICE}"; then
               pkill -f "${SERVICE}"
           fi
-          rm -r 127.0.0.1:*.db || echo "no db to clean"
       else
           set +e # killall will error if finds no process to kill
           killall "${SERVICE}"
@@ -67,7 +65,7 @@ kill_all
 sleep 1
 
 
-echo "Start 3 uninitialized rxqlited servers..."
+echo "Start 3 rxqlited servers..."
 
 RUST_LOG="debug" ${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 2>&1 > n1.log &
 PID1=$!
