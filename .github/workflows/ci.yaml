@@ -12,38 +12,159 @@ env:
 jobs:
   build:
     strategy:
-        matrix:
-          toolchain:
-            - stable
-            
-    runs-on: windows-latest
+      matrix:
+        os: [windows-latest,ubuntu-latest] 
+    
+    runs-on: ${{ matrix.os }}
+    
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-tags: true
+    
+    - name: Define Binary Name(Windows)
+      if: matrix.os == 'windows-latest'
+      run: echo "BINARY_NAME=test-github-release" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - name: Define Binary Name(Ubuntu)  
+      if: matrix.os == 'ubuntu-latest'
+      run: echo "BINARY_NAME=test-github-release" >> $GITHUB_ENV
+      
+    - run: git fetch --no-tags --prune --depth=1 origin +refs/tags/*:refs/tags/*
+    - name: Get latest tag (Windows)
+      if: matrix.os == 'windows-latest'
+      id: get_tag_windows
+      run: |
+        $tag = git describe --tags $(git rev-list --tags --max-count=1)
+        echo "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      shell: pwsh
+    - name: Latest tag (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: git describe --tags `git rev-list --tags --max-count=1`
+      
+    - name: Get latest tag (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      id: get_tag_ubuntu
+      run: echo "TAG=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_ENV
+    - name: Print latest tag
+      run: echo "Latest tag is ${{ env.TAG }}"
+    
+    
+    
+    
+      
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get update && sudo apt-get install -y build-essential
+    
+    - name: Install MSVC
+      if: matrix.os == 'windows-latest'
+      run: choco install visualstudio2022buildtools
+    
+    - name: Install Clang(Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install llvm
+    
+    - name: Add libclang to PATH(Windows)
+      if: matrix.os == 'windows-latest'
+      run: echo "C:/Program Files/LLVM/bin" >> $GITHUB_PATH
+    
+    - name: Install Clang(Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get install -y clang
+      
+    - name: Set target triple (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: echo "TARGET_TRIPLE=x86_64-unknown-linux-gnu" >> $GITHUB_ENV
+    - name: Set target triple (Windows)
+      if: matrix.os == 'windows-latest'
+      run: echo "TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+    - name: Build
+      run: cargo build --release --target ${{ env.TARGET_TRIPLE }}
+    
+    - name: Strip(Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: strip -s target/${{ env.TARGET_TRIPLE }}/release/${{ env.BINARY_NAME }}
+    
+    - name: Install zip (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get install zip
+    - name: Install 7zip (Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install 7zip      
+  
+    
+    - name: Name The Artifcat Archive(Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: echo "ARTIFACT_ARCHIVE=./${{ env.BINARY_NAME }}-ubuntu.zip" >> $GITHUB_ENV
+      
+    - name: Name The Artifcat Archive(Windows)
+      if: matrix.os == 'windows-latest'
+      run: echo "ARTIFACT_ARCHIVE=./${{ env.BINARY_NAME }}-win32.zip" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    
+    - name: Zip the executable(Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: cd ./target/${{ env.TARGET_TRIPLE }}/release && zip ./../../../${{ env.ARTIFACT_ARCHIVE }} ${{ env.BINARY_NAME }} && cd -
+      
+    
+      
+    - name: Zip the executable(Windows)
+      if: matrix.os == 'windows-latest'
+      run: 7z a ${{ env.ARTIFACT_ARCHIVE }} ./target/${{ env.TARGET_TRIPLE }}/release/${{ env.BINARY_NAME }}.exe
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ runner.os }}-artifact
+        path: ${{ env.ARTIFACT_ARCHIVE }}
+      
+      
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
     - uses: actions/checkout@v4
-     
-        
-    - name: Install MSVC
-      run: choco install visualstudio2022buildtools
-    
-    - name: Install Clang
-      run: choco install llvm
-    
-    - name: Add libclang to PATH
-      run: echo "C:/Program Files/LLVM/bin" >> $GITHUB_PATH
+      with:
+        fetch-tags: true 
 
+    - name: Define Binary Name(Windows)
+      if: runner.os == 'Windows'
+      run: echo "BINARY_NAME=test-github-release" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - name: Define Binary Name(Ubuntu)  
+      if: runner.os == 'Linux'
+      run: echo "BINARY_NAME=test-github-release" >> $GITHUB_ENV
+
+    - run: git fetch --no-tags --prune --depth=1 origin +refs/tags/*:refs/tags/*
       
-    - name: Build
-      run: cargo build --release --verbose --target x86_64-pc-windows-msvc
+    - name: Get latest tag
+      id: get_tag_ubuntu
+      run: echo "TAG=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_ENV
+    - name: Print latest tag
+      run: echo "Latest tag is ${{ env.TAG }}"
+      
+    - name: Download Windows Artifact
+      uses: actions/download-artifact@v3
+      with:
+        path: "."
+        name: Windows-artifact
     
-    - name: Install 7zip
-      run: choco install 7zip
-      
-    - name: Zip the executable
-      run: 7z a ./rxqlited-win32.zip ./target/x86_64-pc-windows-msvc/release/rxqlited.exe
+    - name: Download Ubuntu Artifact
+      uses: actions/download-artifact@v3
+      with:
+        path: "."
+        name: Linux-artifact
+    
+    - name: List Files
+      run: ls -R    
     - name: Create release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
       run: |
-        gh release create v0.1.1 ./rxqlited-win32.zip
+        gh release create ${{ env.TAG }} ./${{ env.BINARY_NAME }}-win32.zip ./${{ env.BINARY_NAME }}-ubuntu.zip
+              
+
+    
