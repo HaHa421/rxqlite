@@ -6,6 +6,7 @@ on:
       - 'openraft-0.9'
     tags:
       - 'v*'
+
 env:
   CARGO_TERM_COLOR: always
   
