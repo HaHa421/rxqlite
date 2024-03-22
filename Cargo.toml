@@ -17,8 +17,7 @@ repository = "https://github.com/HaHa421/rxqlite"
 [workspace]
 members = [
   "crates/rxqlite-common",
-  "crates/rxqlite-sqlx-common",
-  "crates/sqlx-rxqlite"
+  "crates/rxqlite-sqlx-common"
 ]
 
 [[bin]]
