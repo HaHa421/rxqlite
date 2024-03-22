@@ -17,7 +17,8 @@ jobs:
         os: [windows-latest,ubuntu-latest] 
     
     runs-on: ${{ matrix.os }}
-    
+    permissions:
+      contents: write
     
     steps:
     - uses: actions/checkout@v4
