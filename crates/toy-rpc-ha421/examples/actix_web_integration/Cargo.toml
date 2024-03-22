@@ -1,0 +1,26 @@
+[package]
+name = "actix_web_integration"
+version = "0.1.0"
+authors = ["Minghua Wu <michael.wu1107@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+toy-rpc = {  path = "../../toy-rpc", features = ["http_actix_web", "server", "client", "ws_tokio"]}
+actix-web = "4"
+actix = "0.13"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "net", "sync"] }
+
+serde = { version = "1.0.117", features = ["derive"] }
+async-trait = "0.1.42"
+env_logger = "0.8.2"
+futures = "0.3.15"
+
+[[bin]]
+name = "server"
+path = "src/bin/server.rs"
+
+[[bin]]
+name = "client"
+path = "src/bin/client.rs" 

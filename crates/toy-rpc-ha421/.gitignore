@@ -1,0 +1,16 @@
+# Added by cargo
+#
+# already existing elements were commented out
+/target
+**/target
+Notes.md
+.idea/
+.vscode/
+*.DS_STORE
+**Cargo.lock
+**/Cargo.lock
+
+*certificate.conf
+*ca.key
+*ca.srl
+*service.csr

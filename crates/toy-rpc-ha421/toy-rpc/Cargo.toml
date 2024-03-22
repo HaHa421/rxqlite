@@ -1,0 +1,159 @@
+[package]
+name = "toy-rpc-ha421"
+version = "0.9.0-beta.1"
+authors = ["Minghua Wu <michael.wu1107@gmail.com>"]
+edition = "2018"
+description = "An async RPC that mimics golang net/rpc's usage and supports both async-std and tokio"
+license = "MIT/Apache-2.0"
+documentation = "https://docs.rs/toy-rpc/"
+homepage = "https://github.com/minghuaw/toy-rpc"
+repository = "https://github.com/minghuaw/toy-rpc"
+keywords = ["async", "rpc", "go", "async-std", "tokio"]
+categories = ["network-programming", "asynchronous"]
+readme = "Readme.md"
+exclude = [
+    "examples/*",
+    "transport/*",
+    ".gitignore",
+    ".idea/*",
+    ".vscode/*",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package.metadata.docs.rs]
+all-features = true
+features = ["docs"]
+rustdoc-args = ["--cfg", "feature=\"docs\""]
+
+[features]
+default = [
+    "serde_bincode",
+    # "server",
+    # "client",
+    # "tokio_runtime",
+    # "async_std_runtime",
+    # "wasm",
+    # "ws_tokio",
+    # "http_actix_web",
+    # "http_warp",
+    # "http_axum",
+]
+
+docs = []
+
+server = ["toy-rpc-macros-ha421/server"]
+client = ["toy-rpc-macros-ha421/client"]
+tls = ["rustls", "tokio-rustls", "futures-rustls", "webpki"]
+ws_tokio = ["tungstenite", "async-tungstenite/tokio-runtime", "tokio_runtime"]
+ws_async_std = ["tungstenite", "async-tungstenite/async-std-runtime", "async_std_runtime"]
+
+# feature flags for codec
+serde_bincode = []
+serde_rmp = ["rmp-serde"]
+
+# feature flags for runtime
+tokio_runtime = ["tokio", "tokio-stream", "toy-rpc-macros-ha421/runtime"]
+async_std_runtime = ["async-std", "toy-rpc-macros-ha421/runtime"]
+http_tide = ["tide", "tide-websockets", "ws_async_std", "async_std_runtime", "server",]
+http_actix_web = ["actix-web", "actix", "actix-rt", "actix-web-actors", "actix-http", "ws_tokio", "tokio_runtime", "server"]
+http_warp = ["warp", "ws_tokio", "tokio_runtime", "server"]
+http_axum = ["axum", "http-body", "bytes", "ws_tokio", "tokio_runtime", "server"]
+
+wasm = ["async-std/wasm-bindgen-futures"]
+
+[dev-dependencies]
+async-std = "1.9.0"
+anyhow = "1.0.38"
+tokio = { version = "1", features = ["rt-multi-thread", "sync"]}
+warp = { version = "0.3" }
+actix-rt = "2"
+actix-web = "4"
+hyper = "0.14.11"
+
+[dependencies]
+# local imports
+# toy-rpc-macros = { path="../macros", default-features = false }
+toy-rpc-macros-ha421 = { path="../macros" , version = "0.7.0-alpha.3", default-features = false }
+
+# feature gated optional dependecies
+serde_json = { version = "1.0", optional = true }
+serde_cbor = { version = "0.11", optional = true }
+rmp-serde = { version = "1", optional = true }
+tide = { version = "0.16", optional = true }
+tide-websockets =  { version = "0.4.0", optional = true }
+actix-web = { version = "4", optional = true }
+actix = { version = "0.13.0", optional = true }
+actix-rt = { version = "2", optional = true }
+actix-web-actors = { version = "4", optional = true }
+actix-http = { version = "3", optional = true }
+warp = { version = "0.3", optional = true }
+axum = { version = "0.5", optional = true, features = ["ws"] }
+hyper = { version = "0.14.11", optional = true }
+http-body = { version = "0.4.2", optional = true }
+bytes = { version = "1.0.1", optional = true }
+tower-service = { version = "0.3.1", optional = true }
+async-std = { version = "1", optional = true }
+tokio = { version = "1", features = ["rt", "io-util", "net", "time"], optional = true }
+tokio-stream = {  version = "0.1", features = ["net"], optional = true }
+tokio-rustls = { version = "0.25.0", optional = true }
+futures-rustls = { version = "0.25", optional = true }
+rustls = { version = "0.22", optional = true }
+webpki = { version = "0.22", features = [ "std" ] , optional = true }
+anyhow = { version = "1", optional = true }
+tungstenite = { version = "0.17", optional = true }
+async-tungstenite = { version = "0.17", optional = true }
+
+bincode = { version = "1.3" }
+serde = { version = "1.0", features = ["derive"] }
+erased-serde = "^0.3.16"
+futures = "0.3"
+async-trait = "0.1"
+log = "0.4"
+lazy_static = "1.4"
+url = "2.2"
+cfg-if = "1.0"
+thiserror = "1.0"
+flume = "0.11"
+pin-project = "1.0"
+crossbeam = "0.8"
+
+[[test]]
+name = "async_std_tcp"
+path = "tests/async_std_tcp.rs"
+required-features = ["async_std_runtime", "server", "client"]
+
+[[test]]
+name = "tokio_tcp"
+path = "tests/tokio_tcp.rs"
+required-features = ["tokio_runtime", "server", "client"]
+
+[[test]]
+name = "async_std_ws"
+path = "tests/async_std_ws.rs"
+required-features = ["async_std_runtime", "server", "client", "ws_async_std"]
+
+[[test]]
+name = "tokio_ws"
+path = "tests/tokio_ws.rs"
+required-features = ["tokio_runtime", "server", "client", "ws_tokio"]
+
+[[test]]
+name = "tide_integration"
+path = "tests/tide_integration.rs"
+required-features = ["http_tide", "server", "client"]
+
+[[test]]
+name = "warp_integration"
+path = "tests/warp_integration.rs"
+required-features = ["http_warp", "server", "client"]
+
+[[test]]
+name = "actix_web_integration"
+path = "tests/actix_web_integration.rs"
+required-features = ["http_actix_web", "server", "client"]
+
+[[test]]
+name = "axum_integration"
+path = "tests/axum_integration.rs"
+required-features = ["http_axum", "server", "client"]

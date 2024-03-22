@@ -6,7 +6,7 @@ use openraft::raft::InstallSnapshotRequest;
 use openraft::raft::InstallSnapshotResponse;
 use openraft::raft::VoteRequest;
 use openraft::raft::VoteResponse;
-use toy_rpc::macros::export_impl;
+use toy_rpc_ha421::macros::export_impl;
 
 use crate::app::App;
 use crate::TypeConfig;
@@ -23,24 +23,24 @@ impl Raft {
     }
 
     #[export_method]
-    pub async fn vote(&self, vote: VoteRequest<u64>) -> Result<VoteResponse<u64>, toy_rpc::Error> {
-        self.app.raft.vote(vote).await.map_err(|e| toy_rpc::Error::Internal(Box::new(e)))
+    pub async fn vote(&self, vote: VoteRequest<u64>) -> Result<VoteResponse<u64>, toy_rpc_ha421::Error> {
+        self.app.raft.vote(vote).await.map_err(|e| toy_rpc_ha421::Error::Internal(Box::new(e)))
     }
 
     #[export_method]
     pub async fn append(
         &self,
         req: AppendEntriesRequest<TypeConfig>,
-    ) -> Result<AppendEntriesResponse<u64>, toy_rpc::Error> {
+    ) -> Result<AppendEntriesResponse<u64>, toy_rpc_ha421::Error> {
         tracing::debug!("handle append");
-        self.app.raft.append_entries(req).await.map_err(|e| toy_rpc::Error::Internal(Box::new(e)))
+        self.app.raft.append_entries(req).await.map_err(|e| toy_rpc_ha421::Error::Internal(Box::new(e)))
     }
 
     #[export_method]
     pub async fn snapshot(
         &self,
         req: InstallSnapshotRequest<TypeConfig>,
-    ) -> Result<InstallSnapshotResponse<u64>, toy_rpc::Error> {
-        self.app.raft.install_snapshot(req).await.map_err(|e| toy_rpc::Error::Internal(Box::new(e)))
+    ) -> Result<InstallSnapshotResponse<u64>, toy_rpc_ha421::Error> {
+        self.app.raft.install_snapshot(req).await.map_err(|e| toy_rpc_ha421::Error::Internal(Box::new(e)))
     }
 }

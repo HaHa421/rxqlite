@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "macros",
+    "toy-rpc",
+]
+
+exclude = [
+    "examples/async_std_tcp",
+    "examples/tokio_tcp",
+    "examples/tide_integration",
+    "examples/actix_web_integration",
+    "examples/websocket",
+    "examples/warp_integration",
+    "examples/docs_examples",
+    "examples/macro_expand",
+    "examples/cancel_and_timeout",
+    "examples/example-service",
+    "examples/example-server",
+    "examples/example-client",
+    "examples/tokio_tls",
+    "examples/async_std_tls",
+    "examples/warp_tls",
+    "examples/tide_tls",
+    "examples/tokio_pubsub",
+    "examples/multi-client",
+    "examples/axum_integration",
+]

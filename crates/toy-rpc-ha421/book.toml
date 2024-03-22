@@ -1,0 +1,16 @@
+[book]
+authors = ["minghuaw"]
+language = "en"
+multilingual = false
+src = "book"
+title = "toy-rpc Book"
+
+[rust]
+edition = "2021"
+
+[build]
+build-dir = "docs"
+create-missing = false
+
+[output.html.playground]
+enable = false

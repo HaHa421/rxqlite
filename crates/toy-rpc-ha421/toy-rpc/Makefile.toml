@@ -1,0 +1,149 @@
+[config]
+skip_core_tasks = true
+
+[tasks.test]
+run_task = [
+    { name = [
+        "test_async_std_tcp", 
+        "test_tokio_tcp", 
+        "test_async_std_ws",
+        "test_tokio_ws",
+        "test_tide_integration",
+        "test_warp_integration",
+        "test_axum_integration",
+        "test_actix_web_integration",
+    ] },
+]
+
+[tasks.test_async_std_tcp]
+run_task = [
+    { name = [
+        "test_async_std_tcp_bincode",
+        "test_async_std_tcp_json",
+        "test_async_std_tcp_cbor",
+        "test_async_std_tcp_rmp",
+    ] },
+]
+
+[tasks.test_async_std_tcp_bincode]
+command = "cargo"
+args = ["test", 
+    "--features", "serde_bincode async_std_runtime server client", 
+    "--no-default-features", 
+    "--test", "async_std_tcp", 
+    "--", "--nocapture"
+]
+
+[tasks.test_async_std_tcp_json]
+command = "cargo"
+args = ["test", 
+    "--features", "serde_json async_std_runtime server client", 
+    "--no-default-features", 
+    "--test", "async_std_tcp", 
+    "--", "--nocapture"
+]
+
+[tasks.test_async_std_tcp_cbor]
+command = "cargo"
+args = ["test", 
+    "--features", "serde_cbor async_std_runtime server client", 
+    "--no-default-features", 
+    "--test", "async_std_tcp", 
+    "--", "--nocapture"
+]
+
+[tasks.test_async_std_tcp_rmp]
+command = "cargo"
+args = ["test", 
+    "--features", "serde_rmp async_std_runtime server client", 
+    "--no-default-features", 
+    "--test", "async_std_tcp", 
+    "--", "--nocapture"
+]
+
+[tasks.test_tokio_tcp]
+run_task = [
+    { name = [
+        "test_tokio_tcp_bincode",
+        "test_tokio_tcp_json",
+    ] },
+]
+
+[tasks.test_tokio_tcp_bincode]
+command = "cargo"
+args = ["test", 
+    "--features", "serde_bincode tokio_runtime server client", 
+    "--no-default-features", 
+    "--test", "tokio_tcp", 
+    "--", "--nocapture"
+]
+
+[tasks.test_tokio_tcp_json]
+command = "cargo"
+args = ["test", 
+    "--features", "serde_json tokio_runtime server client", 
+    "--no-default-features", 
+    "--test", "tokio_tcp", 
+    "--", "--nocapture"
+]
+
+[tasks.test_async_std_ws]
+command = "cargo"
+args = ["test",
+    "--features", "serde_bincode async_std_runtime server client ws_async_std",
+    "--no-default-features",
+    "--test", "async_std_ws",
+    "--", "--nocapture"
+]
+
+[tasks.test_tokio_ws]
+command = "cargo"
+args = ["test",
+    "--features", "serde_bincode tokio_runtime server client ws_tokio",
+    "--no-default-features",
+    "--test", "tokio_ws",
+    "--", "--nocapture"
+]
+
+[tasks.test_tide_integration]
+command = "cargo"
+args = ["test",
+    "--features", "serde_bincode http_tide server client",
+    "--no-default-features",
+    "--test", "tide_integration",
+    "--", "--nocapture"
+]
+
+[tasks.test_warp_integration]
+command = "cargo"
+args = ["test",
+    "--features", "serde_bincode http_warp server client",
+    "--no-default-features",
+    "--test", "warp_integration",
+    "--", "--nocapture"
+]
+
+[tasks.test_axum_integration]
+command = "cargo"
+args = ["test",
+    "--features", "serde_bincode http_axum server client",
+    "--no-default-features",
+    "--test", "axum_integration",
+    "--", "--nocapture"
+]
+
+[tasks.test_actix_web_integration]
+command = "cargo"
+args = ["test",
+    "--features", "serde_bincode http_actix_web server client",
+    "--no-default-features",
+    "--test", "actix_web_integration",
+    "--", "--nocapture"
+]
+
+[tasks.doctest]
+toolchain = "nightly"
+command = "cargo"
+args = [
+    "doc", "--no-deps", "--all-features", "--open"
+]

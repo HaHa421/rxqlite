@@ -17,22 +17,23 @@ use openraft::raft::VoteRequest;
 use openraft::raft::VoteResponse;
 use openraft::AnyError;
 use serde::de::DeserializeOwned;
-use toy_rpc::pubsub::AckModeNone;
-use toy_rpc::Client;
+//use toy_rpc_ha421::pubsub::AckModeNone;
+use toy_rpc_ha421::Client;
 
 use super::raft::RaftClientStub;
 use crate::Node;
 use crate::NodeId;
 use crate::TypeConfig;
 
-use rustls::{Certificate, ClientConfig, RootCertStore};
-use rustls::client::ServerCertVerified;
-use rustls::client::ServerCertVerifier;
+use rustls::{pki_types::CertificateDer, ClientConfig, RootCertStore};
+use rustls::client::danger::ServerCertVerified;
+use rustls::client::danger::ServerCertVerifier;
 
 use crate::RSQliteNodeTlsConfig;
 use std::sync::Arc;
 use std::net::{IpAddr, ToSocketAddrs};
 
+#[derive(Debug)]
 struct AllowAnyCertVerifier;
 
 impl ServerCertVerifier for AllowAnyCertVerifier {
@@ -42,14 +43,46 @@ impl ServerCertVerifier for AllowAnyCertVerifier {
     /// - Valid for DNS entry
     fn verify_server_cert(
         &self,
-        _end_entity: &Certificate,
-        _intermediates: &[Certificate],
-        _server_name: &rustls::ServerName,
-        _scts: &mut dyn Iterator<Item = &[u8]>,
+        _end_entity: &CertificateDer<'_>,
+        _intermediates: &[CertificateDer<'_>],
+        _server_name: &rustls::pki_types::ServerName<'_>,
         _ocsp_response: &[u8],
-        _now: std::time::SystemTime,
+        _now: rustls::pki_types::UnixTime,
     ) -> Result<ServerCertVerified, rustls::Error> {
         Ok(ServerCertVerified::assertion())
+    }
+    fn verify_tls12_signature(
+      &self,
+      _message: &[u8],
+      _cert: &CertificateDer<'_>,
+      _dss: &rustls::DigitallySignedStruct
+    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+      Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
+    }
+    fn verify_tls13_signature(
+        &self,
+        _message: &[u8],
+        _cert: &CertificateDer<'_>,
+        _dss: &rustls::DigitallySignedStruct
+    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+      Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
+    }
+    fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
+      vec![
+        rustls::SignatureScheme::RSA_PKCS1_SHA1,
+        rustls::SignatureScheme::ECDSA_SHA1_Legacy,
+        rustls::SignatureScheme::RSA_PKCS1_SHA256,
+        rustls::SignatureScheme::ECDSA_NISTP256_SHA256,
+        rustls::SignatureScheme::RSA_PKCS1_SHA384,
+        rustls::SignatureScheme::ECDSA_NISTP384_SHA384,
+        rustls::SignatureScheme::RSA_PKCS1_SHA512,
+        rustls::SignatureScheme::ECDSA_NISTP521_SHA512,
+        rustls::SignatureScheme::RSA_PSS_SHA256,
+        rustls::SignatureScheme::RSA_PSS_SHA384,
+        rustls::SignatureScheme::RSA_PSS_SHA512,
+        rustls::SignatureScheme::ED25519,
+        rustls::SignatureScheme::ED448,
+      ]
     }
 }
 
@@ -102,11 +135,10 @@ impl RaftNetworkFactory<TypeConfig> for Network {
           
           if tls_config.accept_invalid_certificates {
             let root_certs = RootCertStore::empty();
-            let mut config = ClientConfig::builder()
-              .with_safe_default_cipher_suites()
-              .with_safe_default_kx_groups()
-              .with_safe_default_protocol_versions()
-              .unwrap()
+            let mut config/*: rustls::ConfigBuilder<ClientConfig,rustls::WantsVersions>*/= ClientConfig::builder()
+              //.with_safe_default_cipher_suites()
+              //.with_safe_default_kx_groups()
+              //.with_safe_default_protocol_versions()
               .with_root_certificates(root_certs)
               .with_no_client_auth();
             config.dangerous().set_certificate_verifier(Arc::new(AllowAnyCertVerifier));
@@ -119,7 +151,7 @@ impl RaftNetworkFactory<TypeConfig> for Network {
           } else {
             let root_certs = RootCertStore::empty();
             let config = ClientConfig::builder()
-              .with_safe_defaults()
+              //.with_safe_defaults()
               .with_root_certificates(root_certs)
               .with_no_client_auth();
             
@@ -144,24 +176,24 @@ impl RaftNetworkFactory<TypeConfig> for Network {
 pub struct NetworkConnection {
     addr: String,
     domain: String,
-    client: Option<Client<AckModeNone>>,
+    client: Option<Client/*<AckModeNone>*/>,
     target: NodeId,
     tls_config : Option<RSQliteNodeTlsConfig>,
 }
 impl NetworkConnection {
     async fn c<E: std::error::Error + DeserializeOwned>(
         &mut self,
-    ) -> Result<&Client<AckModeNone>, RPCError<NodeId, Node, E>> {
+    ) -> Result<&Client/*<AckModeNone>*/, RPCError<NodeId, Node, E>> {
         if self.client.is_none() {
             if let Some(tls_config) =  self.tls_config.as_ref() {
               
               if tls_config.accept_invalid_certificates {
                let root_certs = RootCertStore::empty();
                let mut config = ClientConfig::builder()
-                .with_safe_default_cipher_suites()
-                .with_safe_default_kx_groups()
-                .with_safe_default_protocol_versions()
-                .unwrap()
+                //.with_safe_default_cipher_suites()
+                //.with_safe_default_kx_groups()
+                //.with_safe_default_protocol_versions()
+                //.unwrap()
                 .with_root_certificates(root_certs)
                 .with_no_client_auth()
               ;
@@ -177,7 +209,7 @@ impl NetworkConnection {
               } else {
                 let root_certs = RootCertStore::empty();
                 let config = ClientConfig::builder()
-                  .with_safe_defaults()
+                  //.with_safe_defaults()
                   .with_root_certificates(root_certs)
                   .with_no_client_auth();
                 
@@ -204,22 +236,22 @@ impl Display for ErrWrap {
 
 impl std::error::Error for ErrWrap {}
 
-fn to_error<E: std::error::Error + 'static + Clone>(e: toy_rpc::Error, target: NodeId) -> RPCError<NodeId, Node, E> {
+fn to_error<E: std::error::Error + 'static + Clone>(e: toy_rpc_ha421::Error, target: NodeId) -> RPCError<NodeId, Node, E> {
     match e {
-        toy_rpc::Error::IoError(e) => RPCError::Network(NetworkError::new(&e)),
-        toy_rpc::Error::ParseError(e) => RPCError::Network(NetworkError::new(&ErrWrap(e))),
-        toy_rpc::Error::Internal(e) => {
+        toy_rpc_ha421::Error::IoError(e) => RPCError::Network(NetworkError::new(&e)),
+        toy_rpc_ha421::Error::ParseError(e) => RPCError::Network(NetworkError::new(&ErrWrap(e))),
+        toy_rpc_ha421::Error::Internal(e) => {
             let any: &dyn Any = &e;
             let error: &E = any.downcast_ref().unwrap();
             RPCError::RemoteError(RemoteError::new(target, error.clone()))
         }
-        e @ (toy_rpc::Error::InvalidArgument
-        | toy_rpc::Error::ServiceNotFound
-        | toy_rpc::Error::MethodNotFound
-        | toy_rpc::Error::ExecutionError(_)
-        | toy_rpc::Error::Canceled(_)
-        | toy_rpc::Error::Timeout(_)
-        | toy_rpc::Error::MaxRetriesReached(_)) => RPCError::Network(NetworkError::new(&e)),
+        e @ (toy_rpc_ha421::Error::InvalidArgument
+        | toy_rpc_ha421::Error::ServiceNotFound
+        | toy_rpc_ha421::Error::MethodNotFound
+        | toy_rpc_ha421::Error::ExecutionError(_)
+        | toy_rpc_ha421::Error::Canceled(_)
+        | toy_rpc_ha421::Error::Timeout(_)
+        | toy_rpc_ha421::Error::MaxRetriesReached(_)) => RPCError::Network(NetworkError::new(&e)),
     }
 }
 

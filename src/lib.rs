@@ -49,7 +49,7 @@ use tokio::time::{timeout, Duration};
 use futures::future::poll_fn;
 */
 
-use toy_rpc as toy_rpc;
+use toy_rpc_ha421 as toy_rpc_ha421;
 
 pub type NodeId = u64;
 
@@ -203,10 +203,10 @@ where
     });
     let echo_service = Arc::new(network::raft::Raft::new(app.clone()));
     
-    let mut server_builder = toy_rpc::Server::builder();
+    let mut server_builder = toy_rpc_ha421::Server::builder();
     let handle = if let Some(tls_config) = tls_config.as_ref() {
       let certs = rustls_pemfile::certs(&mut BufReader::new(&mut File::open(&tls_config.cert_path)?))?
-        .into_iter().map(|x|rustls::Certificate(x)).collect::<Vec<_>>();
+        .into_iter().map(|x|rustls::pki_types::CertificateDer::from(x)).collect::<Vec<_>>();
       let mut private_keys =
         rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tls_config.key_path)?))?
             ;
@@ -216,10 +216,10 @@ where
             */
       
       let config_builder : ConfigBuilder<ServerConfig, WantsServerCert> = ServerConfig::builder()
-        .with_safe_defaults()
+        //.with_safe_defaults()
         .with_no_client_auth();
         
-      let config = config_builder.with_single_cert(certs, rustls::PrivateKey(private_keys.remove(0)))?;
+      let config = config_builder.with_single_cert(certs, rustls::pki_types::PrivatePkcs8KeyDer::from(private_keys.remove(0)).into())?;
       /*
       if tls_config.accept_invalid_cert {
         config.dangerous().set_certificate_verifier(Arc::new(AllowAnyCertVerifier));
@@ -431,10 +431,10 @@ where
     let echo_service = Arc::new(network::raft::Raft::new(app.clone()));
     
     
-    let mut server_builder = toy_rpc::Server::builder();
+    let mut server_builder = toy_rpc_ha421::Server::builder();
     let handle = if let Some(tls_config) = tls_config.as_ref() {
       let certs = rustls_pemfile::certs(&mut BufReader::new(&mut File::open(&tls_config.cert_path)?))?
-        .into_iter().map(|x|rustls::Certificate(x)).collect::<Vec<_>>();
+        .into_iter().map(|x|rustls::pki_types::CertificateDer::from(x)).collect::<Vec<_>>();
       let mut private_keys =
         rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tls_config.key_path)?))?
             ;
@@ -443,10 +443,10 @@ where
       let mut keys = load_keys(&tls_config.key_path).unwrap();
             */
       let config_builder : ConfigBuilder<ServerConfig, WantsServerCert> = ServerConfig::builder()
-        .with_safe_defaults()
+        //.with_safe_defaults()
         .with_no_client_auth();
         
-      let config = config_builder.with_single_cert(certs, rustls::PrivateKey(private_keys.remove(0)))?;
+      let config = config_builder.with_single_cert(certs, rustls::pki_types::PrivatePkcs8KeyDer::from(private_keys.remove(0)).into())?;
       /*
       if tls_config.accept_invalid_cert {
         config.dangerous().set_certificate_verifier(Arc::new(AllowAnyCertVerifier));

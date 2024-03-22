@@ -1,0 +1,406 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Change Logs - toy-rpc Book</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="01_introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="02_quickstart.html"><strong aria-hidden="true">2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="03_define_service.html"><strong aria-hidden="true">3.</strong> Define Service</a></li><li class="chapter-item expanded "><a href="04_server.html"><strong aria-hidden="true">4.</strong> Server</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="04a_async_std.html"><strong aria-hidden="true">4.1.</strong> async-std</a></li><li class="chapter-item expanded "><a href="04b_tokio.html"><strong aria-hidden="true">4.2.</strong> tokio</a></li></ol></li><li class="chapter-item expanded "><a href="05_integration.html"><strong aria-hidden="true">5.</strong> Integration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="05a_actix_web.html"><strong aria-hidden="true">5.1.</strong> actix-web</a></li><li class="chapter-item expanded "><a href="05b_tide.html"><strong aria-hidden="true">5.2.</strong> tide</a></li><li class="chapter-item expanded "><a href="05c_warp.html"><strong aria-hidden="true">5.3.</strong> warp</a></li></ol></li><li class="chapter-item expanded "><a href="06_client.html"><strong aria-hidden="true">6.</strong> Client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="06a_cancellation.html"><strong aria-hidden="true">6.1.</strong> Cancellation</a></li><li class="chapter-item expanded "><a href="06b_timeout.html"><strong aria-hidden="true">6.2.</strong> Timeout</a></li></ol></li><li class="chapter-item expanded "><a href="07_tls.html"><strong aria-hidden="true">7.</strong> TLS Support</a></li><li class="chapter-item expanded "><a href="08_pubsub.html"><strong aria-hidden="true">8.</strong> PubSub</a></li><li class="chapter-item expanded "><a href="09_examples.html"><strong aria-hidden="true">9.</strong> Examples</a></li><li class="chapter-item expanded "><a href="10_preview.html"><strong aria-hidden="true">10.</strong> Version 0.9 Preview</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="10a_alpha.1.html"><strong aria-hidden="true">10.1.</strong> 0.9.0-alpha.1</a></li><li class="chapter-item expanded "><a href="10b_alpha.2.html"><strong aria-hidden="true">10.2.</strong> 0.9.0-alpha.2</a></li></ol></li><li class="chapter-item expanded "><a href="change_log.html" class="active"><strong aria-hidden="true">11.</strong> Change Logs</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">toy-rpc Book</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        
+
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
+<h2 id="084"><a class="header" href="#084">0.8.4</a></h2>
+<ul>
+<li>Unified all connection related error (read/write) to <code>Error::IoError(_)</code></li>
+</ul>
+<h2 id="083"><a class="header" href="#083">0.8.3</a></h2>
+<ul>
+<li>Reverting back to 2018 edition</li>
+</ul>
+<h2 id="082"><a class="header" href="#082">0.8.2</a></h2>
+<ul>
+<li>Fixed a bug where attribute macros doesn't parse trait path and type path correctly</li>
+</ul>
+<h2 id="081"><a class="header" href="#081">0.8.1</a></h2>
+<ul>
+<li>Updated dependencies and corresponding examples
+<ul>
+<li><code>axum</code> to the latest version</li>
+<li>WebSocket dependencies like <code>tungstenite</code>, etc</li>
+<li>TLS dependencies like <code>rustls</code>, etc.</li>
+</ul>
+</li>
+<li>Switched from <code>async-rustls</code> to <code>futures-rustls</code></li>
+<li>The error message of sending on a closed channel upon ending a client or server 
+becomes a debug message now.</li>
+</ul>
+<h2 id="080"><a class="header" href="#080">0.8.0</a></h2>
+<ul>
+<li>Finalized features</li>
+</ul>
+<h2 id="080-beta"><a class="header" href="#080-beta">0.8.0-beta</a></h2>
+<ul>
+<li>Added AckMode impl</li>
+<li>Added attribute #[topic()] for derive macro #[derive(Topic)]</li>
+<li>Added integration with <code>axum</code></li>
+</ul>
+<h2 id="080-alpha"><a class="header" href="#080-alpha">0.8.0-alpha</a></h2>
+<h3 id="breaking-changes"><a class="header" href="#breaking-changes">Breaking Changes</a></h3>
+<ul>
+<li>Communication protocol is changed</li>
+</ul>
+<h3 id="non-breaking-changes"><a class="header" href="#non-breaking-changes">Non-breaking Changes</a></h3>
+<ul>
+<li>Added pubsub support</li>
+<li>Added RPC trait implementation generation for client</li>
+</ul>
+<h2 id="074"><a class="header" href="#074">0.7.4</a></h2>
+<ul>
+<li>Fixed wrong documentation for <code>Client::with_stream&lt;T&gt;(stream: T)</code></li>
+</ul>
+<h2 id="del073-yankeddel"><a class="header" href="#del073-yankeddel"><del>0.7.3 (yanked)</del></a></h2>
+<h2 id="072"><a class="header" href="#072">0.7.2</a></h2>
+<ul>
+<li>Relaxed trait bounds on generic type <code>T</code> in <code>Client::with_stream&lt;T&gt;(stream: T)</code></li>
+</ul>
+<h2 id="071"><a class="header" href="#071">0.7.1</a></h2>
+<h3 id="bug-fix"><a class="header" href="#bug-fix">Bug fix</a></h3>
+<ul>
+<li>Fixed a bug where large payload is not written entirely with <code>tokio</code> runtime</li>
+</ul>
+<h2 id="070"><a class="header" href="#070">0.7.0</a></h2>
+<h3 id="breaking-changes-1"><a class="header" href="#breaking-changes-1">Breaking Changes</a></h3>
+<ul>
+<li>The blocking RPC call on the client side is renamed to <code>call_blocking</code></li>
+<li>The asynchronous RPC call on the client side is renamed to <code>call</code></li>
+<li>The <code>call</code> method returns a <code>Call&lt;Res&gt;</code> type where <code>Res</code> represents the <code>Ok</code> type of 
+result. The request is sent by a background task and thus the new <code>call</code> method is 
+similar to the old <code>spawn_task</code> in terms of usage.</li>
+</ul>
+<h3 id="new-features"><a class="header" href="#new-features">New Features</a></h3>
+<ul>
+<li>Cancellation. The <code>Call&lt;Res&gt;</code> type returned by the <code>call</code> method can be canceled by 
+using the <code>cancel()</code> method.</li>
+<li>Timeout. A timeout can be set for the next request by calling <code>client.timeout(duration)</code>. 
+only one request after setting the timeout is going to run with a timeout. If you want to set timeout
+for multiple requests, you need to set the timeout for each of them.</li>
+</ul>
+<h2 id="061"><a class="header" href="#061">0.6.1</a></h2>
+<ul>
+<li>Multiple objects of the same types can be registered on the same server again, but you will need to
+use the <code>ServerBuilder::register_with_name</code> method as opposed to the regular <code>ServerBuilder::register</code>.
+More details can be found in <code>ServerBuilder::register_with_name</code>'s documentation.</li>
+</ul>
+<h2 id="060"><a class="header" href="#060">0.6.0</a></h2>
+<h3 id="breaking-changes-2"><a class="header" href="#breaking-changes-2">Breaking Changes</a></h3>
+<ul>
+<li>In short, this update makes the crate resemble closer to the usage of <code>go</code>'s <code>net/rpc</code> package</li>
+<li>Service registration is simplified to <code>Server::builder().register(foo_service).build()</code>. The examples will be
+updated accordingly. Thus
+<ul>
+<li><code>service!()</code> macro will be deprecated</li>
+<li><code>register</code> function now takes only one argument, which is the instance of the service</li>
+<li>on the client side, the service name will just be the name of the struct. for example,
+to call a RPC method on <code>struct Foo { }</code> service, the client simply uses
+<code>.async_call(&quot;Foo.&lt;method&gt;&quot;).await</code> where <code>&lt;method&gt;</code> should be replaced with the RPC method</li>
+<li>you can still register multiple services on the same server. However, only one object of the same type
+can be registered on the same server. Multiple servers are needed to have multiple objects of the same type.</li>
+</ul>
+</li>
+<li>Re-defined the custom <code>Error</code> type</li>
+</ul>
+<h3 id="non-breaking-changes-1"><a class="header" href="#non-breaking-changes-1">Non-breaking changes</a></h3>
+<ul>
+<li>Fixed bug where client does not interpret error message correctly</li>
+<li>Fixed bug with <code>accept_websocket</code> crashes with incorrect protocol</li>
+</ul>
+<h2 id="054"><a class="header" href="#054">0.5.4</a></h2>
+<ul>
+<li>Handlers are now stored as a <code>fn</code> pointer as opposed to a trait object.</li>
+</ul>
+<h2 id="053"><a class="header" href="#053">0.5.3</a></h2>
+<ul>
+<li>The <code>#[export_impl]</code> macro now generates client stub functions by generating a new trait for <code>toy_rpc::Client</code>.</li>
+</ul>
+<h2 id="050"><a class="header" href="#050">0.5.0</a></h2>
+<p><strong>Breaking changes</strong></p>
+<ul>
+<li>HTTP integration is now accomplished using WebSocket with <code>async_tungstenite</code>, and thus HTTP connections
+of versions &lt;0.5.0 are not compatible with versions &gt;=0.5.0.</li>
+<li>The custom binary transport protocol now includes a magic byte at the beginning, making
+versions &lt;0.5.0 <strong>NOT</strong> compatible with versions &gt;= 0.5.0;</li>
+<li><code>toy_rpc::error::Error</code> changed from struct-like variants to simple enum variants</li>
+<li>Changes to feature flags
+<ul>
+<li>&quot;logging&quot; feature flag is removed</li>
+<li>&quot;surf&quot; feature flag is removed</li>
+<li>&quot;tide&quot; is changed to &quot;http_tide&quot;</li>
+<li>&quot;actix-web&quot; is changed to &quot;http_actix_web&quot;</li>
+<li>added &quot;http_warp&quot; feature flag</li>
+<li>added &quot;async_std_runtime&quot;</li>
+<li>added &quot;tokio_runtime&quot;</li>
+</ul>
+</li>
+</ul>
+<p>Non-breaking changes</p>
+<ul>
+<li>Removed <code>Stream</code> and <code>Sink</code> impl from the custom binary transport protocol <code>Frame</code></li>
+</ul>
+<h2 id="045"><a class="header" href="#045">0.4.5</a></h2>
+<ul>
+<li>Added <code>Sink</code> implementation for the custom binary transport protocol <code>Frame</code></li>
+</ul>
+<h2 id="044"><a class="header" href="#044">0.4.4</a></h2>
+<ul>
+<li>Modified traits <code>CodecRead</code>, <code>CodecWrite</code>, <code>ServerCodec</code>, <code>ClientCodec</code> to no longer
+return number of bytes written</li>
+<li>The number of bytes written for header and body will be logged separately</li>
+</ul>
+<h2 id="043"><a class="header" href="#043">0.4.3</a></h2>
+<ul>
+<li>Removed previously unused NoneError</li>
+<li>Unified <code>call</code>, <code>async_call</code> and <code>spawn_task</code> for socket client
+and HTTP client. The <code>call_http</code>, <code>async_call_http</code>, and <code>spawn_task_http</code>
+methods are kept for compatibility.</li>
+</ul>
+<h2 id="042"><a class="header" href="#042">0.4.2</a></h2>
+<ul>
+<li>Temporary fix of <code>spawn_task()</code> and <code>spawn_task_http()</code> with <code>Arc&lt;Mutex&lt;_&gt;&gt;</code> until
+lifetime with async task is figured out. As a result, <code>Client</code> no longer needs to be declared <code>mut</code>.</li>
+</ul>
+<h2 id="041"><a class="header" href="#041">0.4.1</a></h2>
+<ul>
+<li>Updated documentation</li>
+</ul>
+<h2 id="040"><a class="header" href="#040">0.4.0</a></h2>
+<ul>
+<li>Added <code>actix-web</code> feature flag to support integration with <code>actix-web</code></li>
+</ul>
+<h2 id="031"><a class="header" href="#031">0.3.1</a></h2>
+<ul>
+<li>Added <code>serde_rmp</code> features flag</li>
+<li>Updated and corrected examples in the documentation</li>
+</ul>
+<h2 id="030"><a class="header" href="#030">0.3.0</a></h2>
+<ul>
+<li>Added <code>serde_cbor</code> feature flag</li>
+<li>Changed <code>bincode</code> feature flag to <code>serde_bincode</code></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="10b_alpha.2.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="10b_alpha.2.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
