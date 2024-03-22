@@ -59,29 +59,24 @@ clusters must contain an odd number of nodes (rxqlited as a single node forms a 
 Starting a single node cluster on a local machine:
 using
 ```bash
-rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001
+rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 
 ```
 
 rxqlited will listen on localhost:22001 for api and cluster management requests.
 
-On first cluster run, the leader needs to be initiated as follow:
-
-```bash
-curl http://localhost:21001/cluster/init -H "Content-Type: application/json" -d '{}'
-```
-
-then you can get metrics from rxqlited using the following command:
+You can then get metrics from rxqlited using the following command:
 
 ```bash
 curl http://localhost:21001/cluster/metrics
 ```
 
-you should see the cluster current_leader as node 1, which is expected in a single node cluster.
+You should see the cluster current_leader as node 1, 
+which is expected in a single node cluster.
 
 Starting a 3 node cluster on a local machine:
 
 ```bash
-rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001
+rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 --member "2;127.0.0.1:21002;127.0.0.1:22002" --member "3;127.0.0.1:21003;127.0.0.1:22003" --leader true
 
 rxqlited --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002
 
@@ -91,27 +86,6 @@ rxqlited --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003
 
 will start three instances of rxqlited.
 
-On first cluster run , we need to initialize the cluster:
-we first init the leader as above:
-```bash
-curl http://localhost:21001/cluster/init -H "Content-Type: application/json" -d '{}'
-```
-and then add node 2 and node 3 as learners using the cluster api of node 1 (that is on port 21001):
-
-
-```bash
-curl http://localhost:21001/cluster/add-learner -H "Content-Type: application/json" -d '[2, "127.0.0.1:21002", "127.0.0.1:22002"]'
-
-curl http://localhost:21001/cluster/add-learner -H "Content-Type: application/json" -d '[3, "127.0.0.1:21003", "127.0.0.1:22003"]'
-
-```
-
-We then change the cluster membership from one node (node 1) to three nodes using:
-
-```bash
-curl http://localhost:21001/cluster/change-membership -H "Content-Type: application/json" -d '[1, 2, 3]'
-
-```
 After a few seconds, we can check the cluster metrics using:
 
 ```bash
@@ -121,9 +95,7 @@ curl http://localhost:21001/cluster/metrics
 and check that the cluster contais 3 nodes (membership : [1,2,3]).
 
 
-we are now done with cluster first run initialisation.
-
-any subsequent cluster runs don't need to go through cluster initialisation step.
+Any subsequent cluster runs don't need to pass --member nor --leader when launching nodes
 
 for further information on openraft you can check: https://github.com/datafuselabs/openraft
 
@@ -138,6 +110,12 @@ to ease the use of rxqlite using sqlx (https://github.com/launchbadge/sqlx)
 This version of rxqlited support tls in an insecure mode: 
   It accepts invalid certificates (this includes self-signed certificates)
  
+./ha-init-cluster-insecure.sh shows how to run the cluster in insecure tls mode.
+
+Again, on subsequent cluster runs you dont need to pass all the initialisation parameters.
+One needs only to provide node_id , http_addr and rpc_addr : this will change in next 
+versions, since node_id will be sufficient to launch a node (provided that the data dir is 
+the default ./data-{node-id}
 
 ## License
 
