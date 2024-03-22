@@ -135,7 +135,8 @@ to ease the use of rxqlite using sqlx (https://github.com/launchbadge/sqlx)
 
 ## Security
 
-This version of rxqlited doesn't support tls yet
+This version of rxqlited support tls in an insecure mode: 
+  It accepts invalid certificates (this includes self-signed certificates)
  
 
 ## License
