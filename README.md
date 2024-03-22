@@ -118,7 +118,11 @@ shows how to run the cluster in insecure tls mode.
 It will generate a self signed certificate and private key in certs-test and will use this pair
 for all the nodes in the cluster (3 nodes here).
 
-
+It then starts the three nodes with non tls parameters , adding
+--cert-path for the certificate path,
+--key-path for the private key path,
+--accept-invalid-certificates true.
+the parameter accept-invalid-certificates lets rxqlited accept invalid certificates.
 
 Again, on subsequent cluster runs you dont need to pass all the initialisation parameters.
 One needs only to provide node_id , http_addr and rpc_addr : this will change in next 
