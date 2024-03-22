@@ -218,3 +218,31 @@ pub enum MessageResponse {
 }
 
 
+#[derive(Debug, Clone,Serialize,Deserialize,PartialEq,Eq)]
+pub struct RSQliteNodeTlsConfig {
+  pub key_path: String,
+  pub cert_path: String,
+  pub accept_invalid_certificates: bool,
+}
+
+#[derive(Debug,Default, Clone,Serialize,Deserialize,PartialEq,Eq)]
+pub struct RSQliteClientTlsConfig {
+  pub cert_paths: Vec<String>,
+  pub accept_invalid_certificates: bool,
+}
+
+impl RSQliteClientTlsConfig {
+  pub fn accept_invalid_certificates(mut self,accept_invalid_certificates: bool)->Self {
+    self.accept_invalid_certificates = accept_invalid_certificates;
+    self
+  }
+  pub fn add_cert_path(mut self,cert_path: String)->Self {
+    self.cert_paths.push(cert_path);
+    self
+  }
+}
+
+#[derive(Debug,Default, Clone,Serialize,Deserialize)]
+pub struct RSQliteNodeConfig {
+  pub tls_config : Option<RSQliteNodeTlsConfig>,
+}

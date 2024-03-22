@@ -7,9 +7,9 @@ use openraft::error::RPCError;
 use openraft::error::RemoteError;
 use openraft::RaftMetrics;
 use openraft::TryAsRef;
-use reqwest::Client;
+use reqwest::{Client,ClientBuilder};
 use serde::de::DeserializeOwned;
-use serde::Deserialize;
+//use serde::Deserialize;
 use serde::Serialize;
 
 use crate::typ;
@@ -18,29 +18,86 @@ use crate::NodeId;
 use crate::sqlite_store::Request;
 //use crate::TypeConfig;
 
-use rxqlite_common::{Message,MessageResponse,Value,Rows};
+use rxqlite_common::{
+  Message,
+  MessageResponse,
+  Value,
+  Rows,
+  RSQliteClientTlsConfig,
+};
 
+ 
 use crate::ConnectOptions;
 
+pub struct RXQLiteClientBuilder {
+  leader_id: NodeId,
+  leader_addr: String,
+  tls_config: Option<RSQliteClientTlsConfig>,
+}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Empty {}
+impl RXQLiteClientBuilder {
+  pub fn new(leader_id: NodeId, leader_addr: String)->Self {
+    
+    Self {
+      leader_id,
+      leader_addr,
+      tls_config: None,
+    }
+  }
+  pub fn tls_config(mut self,tls_config: Option<RSQliteClientTlsConfig>)->Self {
+    self.tls_config = tls_config;
+    self
+  }
+  
+  pub fn build(self)->RXQLiteClient {
+    let mut inner = ClientBuilder::new();
+    let use_tls = if let Some(tls_config) = self.tls_config {
+      inner = inner.use_rustls_tls();
+      if tls_config.accept_invalid_certificates {
+        inner = inner.danger_accept_invalid_certs(true);
+      }
+      true
+    } else {
+      false
+    };
+    let inner=inner.build().unwrap();
+    RXQLiteClient {
+        leader: Arc::new(Mutex::new((self.leader_id, self.leader_addr))),
+        inner,
+        use_tls,
+    }
+  }
+}
+ 
 
-pub struct ExampleClient {
+pub struct RXQLiteClient {
     /// The leader node to send request to.
     ///
     /// All traffic should be sent to the leader in a cluster.
     pub leader: Arc<Mutex<(NodeId, String)>>,
 
     pub inner: Client,
+    
+    pub use_tls: bool,
+    
 }
 
-impl ExampleClient {
+impl RXQLiteClient {
 
     pub fn with_options(options: &ConnectOptions) -> Self {
+        let mut inner = ClientBuilder::new();
+        if let Some(tls_config) = options.tls_config.as_ref() {
+          inner = inner.use_rustls_tls();
+          if tls_config.accept_invalid_certificates {
+            inner = inner.danger_accept_invalid_certs(true);
+          }
+          
+        }
+        let inner=inner.build().unwrap();
         Self {
             leader: Arc::new(Mutex::new((options.leader_id, format!("{}:{}",options.leader_host,options.leader_port)))),
-            inner: Client::new(),
+            inner,
+            use_tls: options.tls_config.is_some(),
         }
     }
 
@@ -50,6 +107,7 @@ impl ExampleClient {
         Self {
             leader: Arc::new(Mutex::new((leader_id, leader_addr))),
             inner: Client::new(),
+            use_tls: false,
         }
     }
 
@@ -180,37 +238,9 @@ impl ExampleClient {
           }
         }
     }
-    /*
-    pub async fn write(&self, req: &Request) -> Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>> {
-        self.send_rpc_to_leader("api/write", Some(req)).await
-    }
-
-    /// Read value by key, in an inconsistent mode.
-    ///
-    /// This method may return stale value because it does not force to read on a legal leader.
-    pub async fn read(&self, req: &String) -> Result<String, typ::RPCError> {
-        self.do_send_rpc_to_leader("api/read", Some(req)).await
-    }
-
-    /// Consistent Read value by key, in an inconsistent mode.
-    ///
-    /// This method MUST return consistent value or CheckIsLeaderError.
-    pub async fn consistent_read(&self, req: &String) -> Result<String, typ::RPCError<typ::CheckIsLeaderError>> {
-        self.do_send_rpc_to_leader("api/consistent_read", Some(req)).await
-    }
-    */
+    
     
     // --- Cluster management API
-
-    /// Initialize a cluster of only the node that receives this request.
-    ///
-    /// This is the first step to initialize a cluster.
-    /// With a initialized cluster, new node can be added with [`write`].
-    /// Then setup replication with [`add_learner`].
-    /// Then make the new node a member with [`change_membership`].
-    pub async fn init(&self) -> Result<(), typ::RPCError<typ::InitializeError>> {
-        self.do_send_rpc_to_leader("cluster/init", Some(&Empty {})).await
-    }
 
     /// Add a node as learner.
     ///
@@ -262,7 +292,7 @@ impl ExampleClient {
         let (leader_id, url) = {
             let t = self.leader.lock().unwrap();
             let target_addr = &t.1;
-            (t.0, format!("http://{}/{}", target_addr, uri))
+        (t.0, format!("{}://{}/{}", if self.use_tls {"https" } else { "http" },target_addr, uri))
         };
 
         let resp = if let Some(r) = req {

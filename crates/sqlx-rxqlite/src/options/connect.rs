@@ -53,13 +53,18 @@ impl ConnectOptions for RXQLiteConnectOptions {
             match &*key {
               "ssl"=> {
                 if value == "yes" || value == "1" {
-                  options.scheme=rxqlite::Scheme::HTTPS;
+                  if options.tls_config.is_none() {
+                    options.tls_config=Some(Default::default());
+                  }
+                  options.tls_config.as_mut().unwrap().accept_invalid_certificates = false;
                 }
               }
               "ssl-insecure"=> {
                 if value == "yes" || value == "1" {
-                  options.scheme=rxqlite::Scheme::HTTPS;
-                  options.accept_invalid_cert=true;
+                  if options.tls_config.is_none() {
+                    options.tls_config=Some(Default::default());
+                  }
+                  options.tls_config.as_mut().unwrap().accept_invalid_certificates = true;
                 }
               }
               _=>{}

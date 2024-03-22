@@ -1,11 +1,18 @@
 #![deny(warnings)]
 
 use sqlx::types::chrono::{DateTime,Utc};
-use rxqlite_common::{Message,MessageResponse};
+use rxqlite_common::{
+  Message,
+  MessageResponse,
+  RSQliteClientTlsConfig,
+};
 
 #[tokio::main]
 async fn main() {
-    let client = rxqlite::client::RXQLiteClient::new(1,"127.0.0.1:21001".into());
+    let client = rxqlite::client::RXQLiteClientBuilder::new(1,"127.0.0.1:21001".into())
+      .tls_config(Some(RSQliteClientTlsConfig::default().accept_invalid_certificates(true)))
+      .build();
+    
     
     for _i in 0..1 {
         let metrics = client.metrics().await;

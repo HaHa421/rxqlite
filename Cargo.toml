@@ -1,6 +1,6 @@
 [package]
 name = "rxqlite"
-version = "0.1.1"
+version = "0.1.2"
 readme = "README.md"
 
 edition = "2021"
@@ -29,22 +29,26 @@ path = "bin/main.rs"
 name = "rxqlite-client"
 path = "examples/client.rs"
 
+[[example]]
+name = "rxqlite-client-insecure-tls"
+path = "examples/client_insecure_tls.rs"
+
 [dependencies]
 anyhow = "1"
 rxqlite-common = { version = "0.1" , path = "crates/rxqlite-common" }
 rxqlite-sqlx-common = { version = "0.1" , path = "crates/rxqlite-sqlx-common" , features = [ "sqlite" ] }
 openraft = { version = "0.9", features = ["serde" , "storage-v2"] }
 
-
-
+rustls-pemfile = "1"
+rustls = {version = "0.20" , features = [ "dangerous_configuration" ] }
 tokio = { version = "1.35.1", features = ["full"] }
 byteorder = "1.4.3"
 clap = { version = "4.1.11", features = ["derive", "env"] }
-reqwest = { version = "0.11.9", default-features=false , features = ["json"] }
+reqwest = { version = "0.12", default-features=false , features = ["json" , "rustls-tls" ,"http2" ] }
 rocksdb = { version = "0.22" }
 serde = { version = "1.0.114", features = ["derive"] }
 serde_json = "1.0.57"
-warp = "0.3"
+warp = { version = "0.3" , features = [ "tls" ] }
 # for toy-rpc, use `serde_json` instead of the default `serde_bincode`:
 # bincode which enabled by default by toy-rpc, does not support `#[serde(flatten)]`: https://docs.rs/bincode/2.0.0-rc.3/bincode/serde/index.html#known-issues
 toy-rpc = { version = "0.8.6", features = [
@@ -52,6 +56,7 @@ toy-rpc = { version = "0.8.6", features = [
   "server",
   "client",
   "tokio_runtime",
+  "tls",
 ] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.0", features = ["env-filter"] }

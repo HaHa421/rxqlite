@@ -19,8 +19,8 @@ impl RXQLiteConnectOptions {
             let _ = url.set_password(Some(&password));
         }
         */
-        if self.inner.scheme == rxqlite::Scheme::HTTPS {
-          if self.inner.accept_invalid_cert {
+        if self.inner.tls_config.is_some() {
+          if self.inner.tls_config.as_ref().unwrap().accept_invalid_certificates {
             url.query_pairs_mut().append_pair("ssl-insecure", "yes");
           } else {
             url.query_pairs_mut().append_pair("ssl", "yes");

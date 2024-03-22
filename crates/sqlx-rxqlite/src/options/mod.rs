@@ -1,4 +1,4 @@
-
+use rxqlite::RSQliteClientTlsConfig;
 
 #[derive(Debug, Clone)]
 pub struct RXQLiteConnectOptions {
@@ -18,6 +18,7 @@ impl RXQLiteConnectOptions {
     self.inner.leader_port = port;
     self
   }
+  
   /*
   pub fn user(mut self, user: Option<String>) -> Self {  
     self.inner.user = user;
@@ -29,22 +30,37 @@ impl RXQLiteConnectOptions {
   }
   */
   pub fn use_ssl(mut self, use_ssl: bool) -> Self {  
-    self.inner.scheme = if use_ssl {
-      rxqlite::Scheme::HTTPS
+    if use_ssl {
+      //rxqlite::Scheme::HTTPS
+      self.inner.tls_config = Some(Default::default());
+      self.inner.tls_config.as_mut().unwrap().accept_invalid_certificates = false;
     } else {
-      rxqlite::Scheme::HTTP
-    };
-    self.inner.accept_invalid_cert=false;
+      self.inner.tls_config = None;
+    }
     self
   }
   pub fn use_insecure_ssl(mut self, use_insecure_ssl: bool) -> Self {
-    if use_insecure_ssl {
-      self.inner.scheme = rxqlite::Scheme::HTTPS;
-      self.inner.accept_invalid_cert = true;
-    } else {
-      self.inner.accept_invalid_cert = false;
-      self.inner.scheme = rxqlite::Scheme::HTTP;
+    if self.inner.tls_config.is_none() {
+      self.inner.tls_config = Some(Default::default());
     }
+    if use_insecure_ssl {
+      //self.inner.scheme = rxqlite::Scheme::HTTPS;
+      self.inner.tls_config.as_mut().unwrap().accept_invalid_certificates = true;
+    } else {
+      self.inner.tls_config.as_mut().unwrap().accept_invalid_certificates = false;
+      //self.inner.scheme = rxqlite::Scheme::HTTP;
+    }
+    self
+  }
+  pub fn add_cert_path(mut self, cert_path: String) -> Self {
+    if self.inner.tls_config.is_none() {
+      self.inner.tls_config = Some(Default::default());
+    }
+    self.inner.tls_config.as_mut().unwrap().cert_paths.push(cert_path);
+    self
+  }
+  pub fn tls_config(mut self, tls_config: Option<RSQliteClientTlsConfig>) -> Self {
+    self.inner.tls_config =  tls_config;
     self
   }
 }

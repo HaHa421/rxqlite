@@ -36,6 +36,8 @@
     <img src="https://img.shields.io/crates/v/rxqlite.svg?style=flat-square"
     alt="Crates.io version" /></a>
   
+  [![CI](https://github.com/HaHa421/rxqlite/actions/workflows/ci.yaml/badge.svg?branch=openraft-0.9)](https://github.com/HaHa421/rxqlite/actions/workflows/ci.yaml)
+  
 </div>
 
 ## Install
