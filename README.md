@@ -109,13 +109,21 @@ to ease the use of rxqlite using sqlx (https://github.com/launchbadge/sqlx)
 
 This version of rxqlited support tls in an insecure mode: 
   It accepts invalid certificates (this includes self-signed certificates)
- 
-./ha-init-cluster-insecure.sh shows how to run the cluster in insecure tls mode.
+
+```bash 
+./ha-init-cluster-insecure.sh
+```
+shows how to run the cluster in insecure tls mode.
+
+It will generate a self signed certificate and private key in certs-test and will use this pair
+for all the nodes in the cluster (3 nodes here).
+
+
 
 Again, on subsequent cluster runs you dont need to pass all the initialisation parameters.
 One needs only to provide node_id , http_addr and rpc_addr : this will change in next 
 versions, since node_id will be sufficient to launch a node (provided that the data dir is 
-the default ./data-{node-id}
+the default ./data-{node-id})
 
 ## License
 
