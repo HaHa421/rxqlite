@@ -7,16 +7,16 @@ use crate::NodeId;
 use crate::client::RXQLiteClient;
 use tokio::runtime::Runtime;
 
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 const EXE_SUFFIX:&str=".exe";
 
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 const EXE_SUFFIX:&str="";
 
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 const BASE_PORT:u16=21000;
 
-#[cfg(not(windows))]
+#[cfg(target_os = "linux")]
 const BASE_PORT:u16=22000;
 
 
