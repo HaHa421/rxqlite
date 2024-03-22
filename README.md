@@ -128,9 +128,9 @@ It then starts the three nodes with non tls parameters , adding
 the parameter accept-invalid-certificates lets rxqlited accept invalid certificates.
 
 Again, on subsequent cluster runs you dont need to pass all the initialisation parameters.
-One needs only to provide node_id , http_addr and rpc_addr : this will change in next 
-versions, since node_id will be sufficient to launch a node (provided that the data dir is 
-the default ./data-{node-id})
+One needs only to provide node_id (provided that the data dir is 
+the default ./data-{node-id} wich is not an option in the current release) as shown in
+ha-start-cluster.sh
 
 ## License
 
