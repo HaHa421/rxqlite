@@ -162,7 +162,16 @@ jobs:
         name: Linux-artifact
     
     - name: List Files
-      run: ls -R    
+      run: ls -R  
+
+    - name: Delete release if exists
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+      run: |
+        gh release delete ${{ env.TAG }} -y
+      continue-on-error: true
+        
     - name: Create release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
