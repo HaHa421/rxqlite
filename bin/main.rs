@@ -13,10 +13,10 @@ pub struct Opt {
     pub id: u64,
 
     #[clap(long)]
-    pub http_addr: String,
+    pub http_addr: Option<String>,
 
     #[clap(long)]
-    pub rpc_addr: String,
+    pub rpc_addr: Option<String>,
     
     #[clap(long,action = clap::ArgAction::SetTrue)]
     leader: Option<bool>,
