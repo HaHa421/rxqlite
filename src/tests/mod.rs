@@ -16,7 +16,7 @@ const EXE_SUFFIX:&str="";
 #[cfg(windows)]
 const BASE_PORT:u16=21000;
 
-#[cfg(linux)]
+#[cfg(not(windows))]
 const BASE_PORT:u16=22000;
 
 
@@ -79,7 +79,7 @@ fn init_cluster() {
     );
     //let mut metrics: HashMap<NodeId,typ::RaftMetrics> = Default::default();
     
-    let mut max_wait_loop = 10 * 60; // wait 10 min max for cluster to establish
+    let mut max_wait_loop = 2 * 60; // wait max for cluster to establish
     
     loop {
       if let Ok(metrics) = tm.get_metrics(1).await {
