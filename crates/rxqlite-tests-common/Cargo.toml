@@ -1,0 +1,21 @@
+[package]
+name = "rxqlite-tests-common"
+version = "0.1.0"
+
+
+edition = "2021"
+authors = [
+    "ha421 <hha835773@gmail.com>"
+]
+categories = ["algorithms", "asynchronous", "data-structures"]
+description = "A distributed sqlite database built upon `openraft` ,`sqlx` and `sqlite`."
+homepage = "https://github.com/datafuselabs/openraft"
+keywords = ["raft", "consensus"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/datafuselabs/openraft"
+
+
+[dependencies]
+anyhow = "1"
+rxqlite-common = { version = "0.1" , path = "../rxqlite-common" }
+rcgen="*"

@@ -114,6 +114,10 @@ pub mod typ {
     pub type InitializeError = openraft::error::InitializeError<NodeId, Node>;
 
     pub type ClientWriteResponse = openraft::raft::ClientWriteResponse<TypeConfig>;
+    
+    pub type RaftMetrics = openraft::metrics::RaftMetrics<NodeId, Node>;
+    
+    pub type RaftServerMetrics = openraft::metrics::RaftServerMetrics<NodeId, Node>;
 }
 
 pub type ExampleRaft = openraft::Raft<TypeConfig>;
@@ -236,7 +240,7 @@ where
       server_builder=server_builder.register(echo_service);
       let server = server_builder.build();
       
-      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await.unwrap();
+      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
       
       let handle = task::spawn(async move {
           server.accept_with_tls_config(listener, config).await.unwrap();
@@ -246,7 +250,7 @@ where
       server_builder=server_builder.register(echo_service);
       let server = server_builder.build();
       
-      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await.unwrap();
+      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
       
       let handle = task::spawn(async move {
           server.accept_websocket(listener).await.unwrap();
@@ -473,7 +477,7 @@ where
       server_builder=server_builder.register(echo_service);
       let server = server_builder.build();
       
-      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await.unwrap();
+      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
       
       let handle = task::spawn(async move {
           server.accept_with_tls_config(listener, config).await.unwrap();
@@ -483,7 +487,7 @@ where
       server_builder=server_builder.register(echo_service);
       let server = server_builder.build();
       
-      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await.unwrap();
+      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
       
       let handle = task::spawn(async move {
           server.accept_websocket(listener).await.unwrap();
@@ -597,3 +601,6 @@ impl ConnectOptions {
 pub use client::RXQLiteClient as Connection;
 
 pub use rxqlite_common::FromValueRef;
+
+#[cfg(test)]
+mod tests;
