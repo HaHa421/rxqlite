@@ -122,10 +122,13 @@ impl RXQLiteClient {
     pub async fn sql(&self, req: &Request) -> Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>> {
         self.send_rpc_to_leader("api/sql", Some(req)).await
     }
+    pub async fn consistent_sql(&self, req: &Request) -> Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>> {
+        self.send_rpc_to_leader("api/sql-consistent", Some(req)).await
+    }
     pub async fn execute(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RXQLiteError> {
         let req = Message::Execute(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
-          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+          =self.send_rpc_to_leader("api/sql-consistent", Some(&req)).await;
         match res {
           Ok(res)=>{
             match res.data {
@@ -152,7 +155,7 @@ impl RXQLiteClient {
     pub async fn fetch_all(&self, query: &str,arguments: Vec<Value>) -> Result<Rows, crate::RXQLiteError> {
         let req = Message::Fetch(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
-          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+          =self.send_rpc_to_leader("api/sql-consistent", Some(&req)).await;
         match res {
           Ok(res)=>{
             match res.data {
@@ -179,7 +182,7 @@ impl RXQLiteClient {
     pub async fn fetch_one(&self, query: &str,arguments: Vec<Value>) -> Result<rxqlite_common::Row, crate::RXQLiteError> {
         let req = Message::FetchOne(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
-          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+          =self.send_rpc_to_leader("api/sql-consistent", Some(&req)).await;
         match res {
           Ok(res)=>{
             match res.data {
@@ -210,7 +213,7 @@ impl RXQLiteClient {
     pub async fn fetch_optional(&self, query: &str,arguments: Vec<Value>) -> Result<Option<rxqlite_common::Row>, crate::RXQLiteError> {
         let req = Message::FetchOptional(query.into(),arguments);
         let res: Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>>
-          =self.send_rpc_to_leader("api/sql", Some(&req)).await;
+          =self.send_rpc_to_leader("api/sql-consistent", Some(&req)).await;
         match res {
           Ok(res)=>{
             match res.data {
@@ -345,16 +348,19 @@ impl RXQLiteClient {
                 let raft_err: &typ::RaftError<_> = &remote_err.source;
 
                 if let Some(typ::ForwardToLeader {
-                    leader_id: Some(leader_id),
-                    leader_node: Some(leader_node),
+                    leader_id,//: Some(leader_id),
+                    leader_node,//: Some(leader_node),
                     ..
                 }) = raft_err.forward_to_leader()
                 {
                     // Update target to the new leader.
+                    if let (Some(leader_id),Some(leader_node)) = (leader_id,leader_node)
                     {
                         let mut t = self.leader.lock().unwrap();
                         let api_addr = leader_node.api_addr.clone();
                         *t = (*leader_id, api_addr);
+                    } else {
+                      break Err(rpc_err);
                     }
 
                     n_retry -= 1;

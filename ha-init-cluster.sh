@@ -94,11 +94,11 @@ sleep 1
 echo "Server 1 started as leader"
 
 
-echo "Get metrics from the leader"
-sleep 2
-echo
-rpc 21001/cluster/metrics
-sleep 1
+#echo "Get metrics from the leader"
+#sleep 2
+#echo
+#rpc 21001/cluster/metrics
+#sleep 1
 
 
 

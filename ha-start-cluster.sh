@@ -67,16 +67,22 @@ sleep 1
 
 echo "Start 3 rxqlited servers..."
 
-RUST_LOG="debug" ${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 2>&1 > n1.log &
+RUST_LOG="debug" ${bin} --id 1 2>&1 > n1.log &
+
+#RUST_LOG="debug" ${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 2>&1 > n1.log &
 PID1=$!
 #sleep 1
 echo "Server 1 started"
 
-RUST_LOG="debug" ${bin} --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002 > n2.log &
+RUST_LOG="debug" ${bin} --id 2 > n2.log &
+
+#RUST_LOG="debug" ${bin} --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002 > n2.log &
 #sleep 1
 echo "Server 2 started"
 
-RUST_LOG="debug" ${bin} --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003 > n3.log &
+RUST_LOG="debug" ${bin} --id 3 > n3.log &
 
+#RUST_LOG="debug" ${bin} --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003 > n3.log &
+echo "Server 3 started"
 exit 0
 

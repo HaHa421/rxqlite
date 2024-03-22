@@ -40,6 +40,7 @@ use rustls::{ServerConfig, ConfigBuilder, server::WantsServerCert};
 use std::fs::File;
 use std::io::BufReader;
 //use std::io;
+use serde::{Serialize,Deserialize};
 
 /*
 use std::future::Future;
@@ -117,7 +118,7 @@ pub mod typ {
 
 pub type ExampleRaft = openraft::Raft<TypeConfig>;
 
-//type Server = tide::Server<Arc<App>>;
+
 
 fn with_app(app: Arc<App>) -> impl Filter<Extract = (Arc<App>,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || app.clone())
@@ -134,26 +135,20 @@ where
     }
 }
 */
-/*
-//https://github.com/minghuaw/toy-rpc/blob/main/examples/tokio_tls/src/bin/server.rs
-fn load_certs(path: &str) -> anyhow::Result<Vec<Certificate>> {
-    certs(&mut BufReader::new(File::open(Path::new(path))?))
-        .map(|v| v.into_iter().map(|vv| Certificate(vv)).collect())
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid cert").into())
+
+#[derive(Serialize,Deserialize,Clone)]
+pub struct InstanceParams {
+  pub http_addr: String,
+  pub rpc_addr: String,
+  tls_config: Option<RSQliteNodeTlsConfig>,
 }
 
-fn load_keys(path: &str) -> anyhow::Result<Vec<PrivateKey>> {
-    rsa_private_keys(&mut BufReader::new(File::open(Path::new(path))?))
-        .map(|v| v.into_iter().map(|vv| PrivateKey(vv)).collect())
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid key").into())
-}
-*/
 pub async fn init_example_raft_node<P>(
     node_id: NodeId,
     base_dir: P,
     leader: bool,
-    http_addr: String,
-    rpc_addr: String,
+    http_addr: Option<String>,
+    rpc_addr: Option<String>,
     members : Vec<(NodeId,String,String)>,
     tls_config: Option<RSQliteNodeTlsConfig>,
     
@@ -161,11 +156,24 @@ pub async fn init_example_raft_node<P>(
 where
     P: AsRef<Path>,
 {
+  if http_addr.is_none() {
+    return Err(anyhow::anyhow!("http_addr must be sepcified on server initialization"));
+  }
+  if rpc_addr.is_none() {
+    return Err(anyhow::anyhow!("rpc_addr must be sepcified on server initialization"));
+  }
   std::fs::create_dir_all(&base_dir)?;
   
-  let tls_config_json=serde_json::to_string(&tls_config)?;
+  let instance_params = InstanceParams {
+    http_addr:http_addr.unwrap(),
+    rpc_addr:rpc_addr.unwrap(),
+    tls_config
+  };
   
-  tokio::fs::write(base_dir.as_ref().join("tls_config.json"),tls_config_json.as_bytes()).await?;
+    
+  let instance_params_json=serde_json::to_string(&instance_params)?;
+  
+  tokio::fs::write(base_dir.as_ref().join("instance_params.json"),instance_params_json.as_bytes()).await?;
   
   let rocksdb_dir = base_dir.as_ref().join("rocksdb");
   let sqlite_path = base_dir.as_ref().join("sqlite.db");
@@ -186,7 +194,7 @@ where
     // Create the network layer that will connect and communicate the raft instances and
     // will be used in conjunction with the store created above.
     let network = Network {
-      tls_config: tls_config.clone(),
+      tls_config: instance_params.tls_config.clone(),
     };
 
     // Create a local raft instance.
@@ -194,8 +202,8 @@ where
     
     let app = Arc::new(App {
         id: node_id,
-        api_addr: http_addr.clone(),
-        rpc_addr: rpc_addr.clone(),
+        api_addr: instance_params.http_addr.clone(),
+        rpc_addr: instance_params.rpc_addr.clone(),
         raft,
         //key_values: kvs,
         sqlite_and_path,
@@ -204,7 +212,7 @@ where
     let echo_service = Arc::new(network::raft::Raft::new(app.clone()));
     
     let mut server_builder = toy_rpc_ha421::Server::builder();
-    let handle = if let Some(tls_config) = tls_config.as_ref() {
+    let handle = if let Some(tls_config) = instance_params.tls_config.as_ref() {
       let certs = rustls_pemfile::certs(&mut BufReader::new(&mut File::open(&tls_config.cert_path)?))?
         .into_iter().map(|x|rustls::pki_types::CertificateDer::from(x)).collect::<Vec<_>>();
       let mut private_keys =
@@ -228,7 +236,7 @@ where
       server_builder=server_builder.register(echo_service);
       let server = server_builder.build();
       
-      let listener = TcpListener::bind(rpc_addr.clone()).await.unwrap();
+      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await.unwrap();
       
       let handle = task::spawn(async move {
           server.accept_with_tls_config(listener, config).await.unwrap();
@@ -238,13 +246,22 @@ where
       server_builder=server_builder.register(echo_service);
       let server = server_builder.build();
       
-      let listener = TcpListener::bind(rpc_addr.clone()).await.unwrap();
+      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await.unwrap();
       
       let handle = task::spawn(async move {
           server.accept_websocket(listener).await.unwrap();
       });
       handle
     };
+    
+    let execute_consistent_query = warp::post()
+        .and(warp::path!("api" / "sql-consistent"))
+        .and(warp::body::json())
+        .and(with_app(app.clone()))
+        .and_then(
+          |arg0 : Message, arg1: Arc<App>| api::sql_consistent(arg0, arg1)
+        )
+        ;
     
     let execute_query = warp::post()
         .and(warp::path!("api" / "sql"))
@@ -285,26 +302,26 @@ where
       .and_then(management::snapshot);
       
     let routes = execute_query
+      .or(execute_consistent_query)
       .or(management_add_learner)
       .or(management_change_membership)
       //.or(management_init)
       .or(management_metrics)
       .or(management_snapshot);
     
-    let http_addr_=http_addr.clone();
-    let tls_config_=tls_config.clone();
+    let instance_params_=instance_params.clone();
     let _server = tokio::spawn(async move {
-            if let Some(tls_config) = tls_config_ {
+            if let Some(tls_config) = instance_params_.tls_config {
               warp::serve(routes)
                 .tls()
                 .cert_path(&tls_config.cert_path)
                 .key_path(&tls_config.key_path)
-                .run(SocketAddr::from_str(&http_addr_).unwrap())
+                .run(SocketAddr::from_str(&instance_params_.http_addr).unwrap())
                 .await;
               
             } else {
               warp::serve(routes)
-                .run(SocketAddr::from_str(&http_addr_).unwrap())
+                .run(SocketAddr::from_str(&instance_params_.http_addr).unwrap())
                 .await;
             }
     });
@@ -312,8 +329,8 @@ where
     if leader {
       let mut nodes = BTreeMap::new();
       let node = Node {
-          api_addr: http_addr.clone(),
-          rpc_addr: rpc_addr.clone(),
+          api_addr: instance_params.http_addr.clone(),
+          rpc_addr: instance_params.rpc_addr.clone(),
           //tls_config:tls_config.clone(),
       };
       nodes.insert(app.id, node);
@@ -377,11 +394,12 @@ where
     
 }
 
+
 pub async fn start_example_raft_node<P>(
     node_id: NodeId,
     base_dir: P,
-    http_addr: String,
-    rpc_addr: String,
+    _http_addr: Option<String>,
+    _rpc_addr: Option<String>,
     _tls_config: Option<RSQliteNodeTlsConfig>,
     
 ) -> anyhow::Result<()>
@@ -389,8 +407,8 @@ where
     P: AsRef<Path>,
 {
     
-    let tls_config_json = tokio::fs::read_to_string(base_dir.as_ref().join("tls_config.json")).await?;
-    let tls_config: Option<RSQliteNodeTlsConfig> = serde_json::from_str(&tls_config_json)?;
+    let tls_instance_params_json = tokio::fs::read_to_string(base_dir.as_ref().join("instance_params.json")).await?;
+    let instance_params: InstanceParams = serde_json::from_str(&tls_instance_params_json)?;
     
     
     let rocksdb_dir = base_dir.as_ref().join("rocksdb");
@@ -412,7 +430,7 @@ where
     // Create the network layer that will connect and communicate the raft instances and
     // will be used in conjunction with the store created above.
     let network = Network {
-      tls_config: tls_config.clone(),
+      tls_config: instance_params.tls_config.clone(),
     };
 
     // Create a local raft instance.
@@ -420,8 +438,8 @@ where
     
     let app = Arc::new(App {
         id: node_id,
-        api_addr: http_addr.clone(),
-        rpc_addr: rpc_addr.clone(),
+        api_addr: instance_params.http_addr.clone(),
+        rpc_addr: instance_params.rpc_addr.clone(),
         raft,
         //key_values: kvs,
         sqlite_and_path,
@@ -432,7 +450,7 @@ where
     
     
     let mut server_builder = toy_rpc_ha421::Server::builder();
-    let handle = if let Some(tls_config) = tls_config.as_ref() {
+    let handle = if let Some(tls_config) = instance_params.tls_config.as_ref() {
       let certs = rustls_pemfile::certs(&mut BufReader::new(&mut File::open(&tls_config.cert_path)?))?
         .into_iter().map(|x|rustls::pki_types::CertificateDer::from(x)).collect::<Vec<_>>();
       let mut private_keys =
@@ -455,7 +473,7 @@ where
       server_builder=server_builder.register(echo_service);
       let server = server_builder.build();
       
-      let listener = TcpListener::bind(rpc_addr.clone()).await.unwrap();
+      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await.unwrap();
       
       let handle = task::spawn(async move {
           server.accept_with_tls_config(listener, config).await.unwrap();
@@ -465,7 +483,7 @@ where
       server_builder=server_builder.register(echo_service);
       let server = server_builder.build();
       
-      let listener = TcpListener::bind(rpc_addr.clone()).await.unwrap();
+      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await.unwrap();
       
       let handle = task::spawn(async move {
           server.accept_websocket(listener).await.unwrap();
@@ -481,6 +499,14 @@ where
         .and(with_app(app.clone()))
         .and_then(
           |arg0 : Message, arg1: Arc<App>| api::sql(arg0, arg1)
+        )
+        ;
+    let execute_consistent_query = warp::post()
+        .and(warp::path!("api" / "sql-consistent"))
+        .and(warp::body::json())
+        .and(with_app(app.clone()))
+        .and_then(
+          |arg0 : Message, arg1: Arc<App>| api::sql_consistent(arg0, arg1)
         )
         ;
         
@@ -514,6 +540,7 @@ where
       .and_then(management::snapshot);
       
     let routes = execute_query
+      .or(execute_consistent_query)
       .or(management_add_learner)
       .or(management_change_membership)
       //.or(management_init)
@@ -521,17 +548,17 @@ where
       .or(management_snapshot);
 
     let _server = tokio::spawn(async move {
-            if let Some(tls_config) = tls_config.as_ref() {
+            if let Some(tls_config) = instance_params.tls_config.as_ref() {
               warp::serve(routes)
                 .tls()
                 .cert_path(&tls_config.cert_path)
                 .key_path(&tls_config.key_path)
-                .run(SocketAddr::from_str(&http_addr).unwrap())
+                .run(SocketAddr::from_str(&instance_params.http_addr).unwrap())
                 .await;
               
             } else {
               warp::serve(routes)
-                .run(SocketAddr::from_str(&http_addr).unwrap())
+                .run(SocketAddr::from_str(&instance_params.http_addr).unwrap())
                 .await;
             }
     });

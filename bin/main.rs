@@ -31,7 +31,7 @@ pub struct Opt {
     #[clap(long)]
     cert_path: Option<String>,
     
-    #[clap(long)]
+    #[clap(long,action = clap::ArgAction::SetTrue)]
     accept_invalid_certificates: Option<bool>,
 }
 

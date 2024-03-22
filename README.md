@@ -44,7 +44,10 @@
 
 <br />
 
-Right now , you need to compile rxsqlited
+You can compile rxqlited or use binaries built for Windows or Ubuntu (x86_64) on github available at: https://github.com/HaHa421/rxqlite/releases.
+
+In case of binaries, be sure to use to use the latest version.
+
 
 Windows: you need to use the msvc toolchain (mingw build is broken due to https://github.com/rust-rocksdb/rust-rocksdb/issues/866)
 
@@ -59,7 +62,7 @@ clusters must contain an odd number of nodes (rxqlited as a single node forms a 
 Starting a single node cluster on a local machine:
 using
 ```bash
-rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 
+rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001
 ```
 
 rxqlited will listen on localhost:22001 for api and cluster management requests.
