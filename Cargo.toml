@@ -8,7 +8,7 @@ authors = [
     "ha421 <hha835773@gmail.com>",
 ]
 categories = ["distributed", "database", "raft" , "sqlite" ]
-description = "A distributed sqlite database built upon `openraft` and `sqlite`."
+description = "A distributed sqlite database built upon `openraft`, `sqlx` and `sqlite`."
 homepage = "https://github.com/HaHa421/rxqlite"
 keywords = ["distributed", "sqlite"]
 license = "MIT OR Apache-2.0"

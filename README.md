@@ -110,7 +110,7 @@ to ease the use of rxqlite using sqlx (https://github.com/launchbadge/sqlx)
 
 ## Security
 
-This version of rxqlited support tls in an insecure mode: 
+This version of rxqlited supports tls in an insecure mode: 
   It accepts invalid certificates (this includes self-signed certificates)
 
 ```bash 
@@ -134,11 +134,14 @@ ha-start-cluster.sh
 
 ## License
 
-Licensed under
+Licensed under either of
 
 -   Apache License, Version 2.0
     ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-.
+-   MIT license
+    ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
 
 ## Contribution
 
