@@ -82,12 +82,28 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: echo "TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     
+    - name: Update local toolchain
+      run: |
+        rustup update
+          
     - name: Display Rust Version
-      run: cargo -vV
+      run:  |
+        cargo -vV
+        rustc -vV
     
-    - name: Test
+    - name: Test(Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
       run: cargo test --release --target ${{ env.TARGET_TRIPLE }} -- --test-threads=1
-      
+      env:
+        CARGO_TERM_COLOR: always
+        TMPDIR: ${{ runner.temp }}
+    - name: Test(Windows)
+      if: matrix.os == 'windows-latest'
+      run: cargo test --release --target ${{ env.TARGET_TRIPLE }} -- --test-threads=1
+      env:
+        CARGO_TERM_COLOR: always
+        TEMP: ${{ runner.temp }}
+        
     - name: Build
       run: cargo build --release --target ${{ env.TARGET_TRIPLE }}
     
