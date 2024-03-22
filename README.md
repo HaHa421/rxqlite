@@ -101,7 +101,7 @@ for further information on openraft you can check: https://github.com/datafusela
 
 the client example shows a basic usage of the api using rust.
 
-Furthermore, an sqlx driver is available from https://github.com/HaHa421/rxqlite/tree/main/crates/sqlx-rxqlite 
+Furthermore, an sqlx driver is available from https://github.com/HaHa421/sqlx-rxqlite 
 to ease the use of rxqlite using sqlx (https://github.com/launchbadge/sqlx)
 
 
