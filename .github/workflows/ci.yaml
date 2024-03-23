@@ -75,6 +75,14 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y clang
       
+    - name: Install Openssl(Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install openssl
+    
+    - name: Install Openssl(Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get install -y openssl
+      
     - name: Set target triple (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: echo "TARGET_TRIPLE=x86_64-unknown-linux-gnu" >> $GITHUB_ENV
@@ -112,14 +120,14 @@ jobs:
     
     - name: Test(Ubuntu)
       if: matrix.os == 'ubuntu-latest'
-      run: cargo test --release --target ${{ env.TARGET_TRIPLE }} -- --test-threads=1
+      run: cargo test --release --target ${{ env.TARGET_TRIPLE }} -- --nocapture
       env:
         CARGO_TERM_COLOR: always
         TMPDIR: ${{ runner.temp }}
         RXQLITED_DIR: ${{ github.workspace }}/target/${{ env.TARGET_TRIPLE }}/release
     - name: Test(Windows)
       if: matrix.os == 'windows-latest'
-      run: cargo test --release --target ${{ env.TARGET_TRIPLE }} -- --test-threads=1
+      run: cargo test --release --target ${{ env.TARGET_TRIPLE }} -- --nocapture
       env:
         CARGO_TERM_COLOR: always
         TEMP: ${{ runner.temp }}
