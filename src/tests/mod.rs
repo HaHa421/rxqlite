@@ -33,6 +33,7 @@ pub fn default_cluster_manager()->anyhow::Result<TestClusterManager> {
     println!("using rxqlited: {}",executable_path.display());
     executable_path
   };
+  assert!(executable_path.is_file());
   
   let temp_dir = env::temp_dir();
   let working_directory=temp_dir.join("init_cluster");
