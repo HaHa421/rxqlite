@@ -57,6 +57,7 @@ pub struct TestClusterManager {
   pub tls_config: Option<TestTlsConfig>,
   pub working_directory: std::path::PathBuf,
   pub executable: String,
+  pub keep_temp_directories: bool,
 }
 
 impl TestClusterManager {
@@ -146,7 +147,7 @@ impl TestClusterManager {
           http_addr,
           node_id,
           child: Some(child),
-          data_path: working_directory.as_ref().join(format!("data-{}",i)),
+          data_path: working_directory.as_ref().join(format!("data-{}",i+1)),
         }
       );
     }
@@ -155,6 +156,7 @@ impl TestClusterManager {
       tls_config,
       working_directory:working_directory.as_ref().to_path_buf(),
       executable,
+      keep_temp_directories: false,
     })
   }
   pub fn kill_all(&mut self)-> anyhow::Result<()> {
@@ -194,6 +196,9 @@ impl TestClusterManager {
     Ok(())
   }
   pub fn clean_directories(&self)->anyhow::Result<()> {
+    if self.keep_temp_directories {
+      return Ok(());
+    }
     if let Err(err) = std::fs::remove_dir_all(&self.working_directory) {
       eprintln!("error removing directory : {}({})",self.working_directory.display(),err);
       Err(err.into())

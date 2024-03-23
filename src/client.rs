@@ -30,19 +30,19 @@ use rxqlite_common::{
 use crate::ConnectOptions;
 
 pub struct RXQLiteClientBuilder {
-  leader_id: NodeId,
-  leader_addr: String,
+  node_id: NodeId,
+  node_addr: String,
   //tls_config: Option<RSQliteClientTlsConfig>,
   use_tls: bool,
   accept_invalid_certificates: bool,
 }
 
 impl RXQLiteClientBuilder {
-  pub fn new(leader_id: NodeId, leader_addr: String)->Self {
+  pub fn new(node_id: NodeId, node_addr: String)->Self {
     
     Self {
-      leader_id,
-      leader_addr,
+      node_id,
+      node_addr,
       //tls_config: None,
       use_tls: false,
       accept_invalid_certificates:false,
@@ -78,7 +78,8 @@ impl RXQLiteClientBuilder {
     };
     let inner=inner.build().unwrap();
     RXQLiteClient {
-        leader: Arc::new(Mutex::new((self.leader_id, self.leader_addr))),
+        node: Arc::new(Mutex::new((self.node_id, self.node_addr.clone()))),
+        leader: Arc::new(Mutex::new((self.node_id, self.node_addr))),
         inner,
         use_tls,
     }
@@ -91,6 +92,11 @@ pub struct RXQLiteClient {
     ///
     /// All traffic should be sent to the leader in a cluster.
     pub leader: Arc<Mutex<(NodeId, String)>>,
+    
+    /// The original node to send request to.
+    ///
+    /// Mainly used to get node metrics.
+    pub node: Arc<Mutex<(NodeId, String)>>,
 
     pub inner: Client,
     
@@ -110,8 +116,11 @@ impl RXQLiteClient {
           
         }
         let inner=inner.build().unwrap();
+        let node = Arc::new(Mutex::new((options.leader_id, format!("{}:{}",options.leader_host,options.leader_port))));
+        let leader = Arc::new(Mutex::new((options.leader_id, format!("{}:{}",options.leader_host,options.leader_port))));
         Self {
-            leader: Arc::new(Mutex::new((options.leader_id, format!("{}:{}",options.leader_host,options.leader_port)))),
+            node,
+            leader,
             inner,
             use_tls: options.tls_config.is_some(),
         }
@@ -119,9 +128,10 @@ impl RXQLiteClient {
 
 
     /// Create a client with a leader node id and a node manager to get node address by node id.
-    pub fn new(leader_id: NodeId, leader_addr: String) -> Self {
+    pub fn new(node_id: NodeId, node_addr: String) -> Self {
         Self {
-            leader: Arc::new(Mutex::new((leader_id, leader_addr))),
+            node: Arc::new(Mutex::new((node_id, node_addr.clone()))),
+            leader: Arc::new(Mutex::new((node_id, node_addr))),
             inner: Client::new(),
             use_tls: false,
         }
@@ -290,7 +300,16 @@ impl RXQLiteClient {
     pub async fn metrics(&self) -> Result<RaftMetrics<NodeId, Node>, typ::RPCError> {
         self.do_send_rpc_to_leader("cluster/metrics", None::<&()>).await
     }
-
+    
+    /// Get the metrics about the cluster from the original node.
+    ///
+    /// Metrics contains various information about the cluster, such as current leader,
+    /// membership config, replication status etc.
+    /// See [`RaftMetrics`].
+    pub async fn node_metrics(&self) -> Result<RaftMetrics<NodeId, Node>, typ::RPCError> {
+        self.do_send_rpc_to_node("cluster/metrics", None::<&()>).await
+    }
+    
     // --- Internal methods
 
     /// Send RPC to specified node.
@@ -298,6 +317,53 @@ impl RXQLiteClient {
     /// It sends out a POST request if `req` is Some. Otherwise a GET request.
     /// The remote endpoint must respond a reply in form of `Result<T, E>`.
     /// An `Err` happened on remote will be wrapped in an [`RPCError::RemoteError`].
+    async fn do_send_rpc_to_node<Req, Resp, Err>(
+        &self,
+        uri: &str,
+        req: Option<&Req>,
+    ) -> Result<Resp, RPCError<NodeId, Node, Err>>
+    where
+        Req: Serialize + 'static,
+        Resp: Serialize + DeserializeOwned,
+        Err: std::error::Error + Serialize + DeserializeOwned,
+    {
+        let (node_id, url) = {
+            let t = self.node.lock().unwrap();
+            let target_addr = &t.1;
+        (t.0, format!("{}://{}/{}", if self.use_tls {"https" } else { "http" },target_addr, uri))
+        };
+
+        let resp = if let Some(r) = req {
+            println!(
+                ">>> client send request to {}: {}",
+                url,
+                serde_json::to_string_pretty(&r).unwrap()
+            );
+            self.inner.post(url.clone()).json(r)
+        } else {
+            println!(">>> client send request to {}", url,);
+            self.inner.get(url.clone())
+        }
+        .send()
+        .await
+        .map_err(|e| RPCError::Network(NetworkError::new(&e)))?;
+
+        let res: Result<Resp, Err> = resp.json().await.map_err(|e| RPCError::Network(NetworkError::new(&e)))?;
+        println!(
+            "<<< client recv reply from {}: {}",
+            url,
+            serde_json::to_string_pretty(&res).unwrap()
+        );
+
+        res.map_err(|e| RPCError::RemoteError(RemoteError::new(node_id, e)))
+    }
+    /// Send RPC to specified node.
+    ///
+    /// It sends out a POST request if `req` is Some. Otherwise a GET request.
+    /// The remote endpoint must respond a reply in form of `Result<T, E>`.
+    /// An `Err` happened on remote will be wrapped in an [`RPCError::RemoteError`].
+    
+    
     async fn do_send_rpc_to_leader<Req, Resp, Err>(
         &self,
         uri: &str,

@@ -7,8 +7,12 @@ use crate::NodeId;
 use crate::client::RXQLiteClient;
 use tokio::runtime::Runtime;
 use crate::client::RXQLiteClientBuilder;
+use openraft::LogId;
+use futures::future::join_all;
 
 mod init_start;
+
+mod queries;
 
 #[cfg(target_os = "windows")]
 const EXE_SUFFIX:&str=".exe";
@@ -123,6 +127,44 @@ impl TestManager {
     }
     Err(anyhow::anyhow!("wait_for_cluster_established timeout"))
   }
-  
+  pub async fn wait_for_last_applied_log(&self,
+    log_id : LogId<NodeId>,
+    reattempts: usize,
+  )->anyhow::Result<HashMap<NodeId,typ::RaftMetrics>> {
+    let mut reattempts = reattempts+1;
+    let mut node_metrics: HashMap<NodeId,typ::RaftMetrics>=Default::default();
+    
+    loop {
+      let mut futs = vec![];
+      for (node_id, client) in self.clients.iter() {
+        if node_metrics.contains_key(node_id) {
+          continue;
+        }
+        futs.push(client.node_metrics());
+      }
+      if futs.len() == 0 {
+        return Ok(node_metrics);
+      }
+      let metrics = join_all(futs).await;
+      for metrics in metrics {
+        if let Ok(metrics)=metrics {
+          if let Some(last_applied) = metrics.last_applied {
+            if last_applied >= log_id {
+              node_metrics.insert(metrics.id,metrics);
+            }
+          }
+        }
+      }
+      if node_metrics.len() == self.clients.len() {
+        return Ok(node_metrics);
+      }
+      reattempts-=1;
+      if reattempts == 0 {
+        break;
+      }
+      std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+    Err(anyhow::anyhow!("wait_for_last_applied_log timeout"))
+  }
 }
 
