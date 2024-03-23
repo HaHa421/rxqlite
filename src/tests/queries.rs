@@ -3,13 +3,11 @@ use rxqlite_common::{Message,MessageResponse};
 use sqlx::types::chrono::{DateTime,Utc};
 use sqlx::{SqlitePool,Row};
 
-
-#[test]
-fn simple_query() {
+fn do_simple_query(test_name:&str,tls_config: Option<TestTlsConfig>) {
   let rt = Runtime::new().unwrap();
   let _= rt.block_on(async {
     const QUERY: &str ="SELECT name,birth_date from _test_user_ where name = ?";
-    let /*mut*/ tm = TestManager::new("simple_query",3,None);
+    let /*mut*/ tm = TestManager::new(test_name,3,tls_config);
     //tm.keep_temp_directories=true;
     tm.wait_for_cluster_established(1,60).await.unwrap();
     let client = tm.clients.get(&1).unwrap();
@@ -83,5 +81,15 @@ fn simple_query() {
       }
       MessageResponse::Error(err)=>panic!("{}",err),
     }
-  });
+  });  
+}
+
+#[test]
+fn simple_query() {
+  do_simple_query("simple_query",None);
+}
+
+#[test]
+fn simple_query_insecure_ssl() {
+  do_simple_query("simple_query_insecure_ssl",Some(TestTlsConfig::default().accept_invalid_certificates(true)));
 }
