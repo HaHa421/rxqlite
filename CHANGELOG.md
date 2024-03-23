@@ -15,6 +15,8 @@ Node startup has been simplified: when the cluster has been already initialized,
 on next startups, a node needs only its node id to launch:
 This is shown in ha-init-cluster.sh or ha-init-cluster-insecure.sh, and ha-start-cluster.sh (when you have rebooted the machine or `killed` the cluster using ha-kill-cluster.sh)
 
+## [0.1.5] - 2024-03-23
+Added initial test infrastructure
 
 ## [0.1.3] - 2024-03-21
 
