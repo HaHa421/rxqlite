@@ -93,8 +93,22 @@ jobs:
     
     
         
-    - name: Build
+    - name: Build(Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
       run: cargo build --release --target ${{ env.TARGET_TRIPLE }}
+      env:
+        CARGO_TERM_COLOR: always
+        TMPDIR: ${{ runner.temp }}
+        CARGO_TARGET_DIR: ${{ env.GITHUB_WORKSPACE }}/target/${{ env.TARGET_TRIPLE }}/release
+        
+    - name: Build(Windows)
+      if: matrix.os == 'windows-latest'
+      run: cargo build --release --target ${{ env.TARGET_TRIPLE }}
+      env:
+        CARGO_TERM_COLOR: always
+        TEMP: ${{ runner.temp }}
+        CARGO_TARGET_DIR: ${{ env.GITHUB_WORKSPACE }}/target/${{ env.TARGET_TRIPLE }}/release
+    
     
     - name: Test(Ubuntu)
       if: matrix.os == 'ubuntu-latest'
@@ -102,14 +116,14 @@ jobs:
       env:
         CARGO_TERM_COLOR: always
         TMPDIR: ${{ runner.temp }}
-        CARGO_TARGET_DIR: ./target/${{ env.TARGET_TRIPLE }}/release
+        CARGO_TARGET_DIR: ${{ env.GITHUB_WORKSPACE }}/target/${{ env.TARGET_TRIPLE }}/release
     - name: Test(Windows)
       if: matrix.os == 'windows-latest'
       run: cargo test --release --target ${{ env.TARGET_TRIPLE }} -- --test-threads=1
       env:
         CARGO_TERM_COLOR: always
         TEMP: ${{ runner.temp }}
-        CARGO_TARGET_DIR: ./target/${{ env.TARGET_TRIPLE }}/release
+        CARGO_TARGET_DIR: ${{ env.GITHUB_WORKSPACE }}/target/${{ env.TARGET_TRIPLE }}/release
     
     - name: Strip(Ubuntu)
       if: matrix.os == 'ubuntu-latest'
