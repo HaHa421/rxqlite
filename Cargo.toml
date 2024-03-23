@@ -73,7 +73,7 @@ version = "0.7"
 maplit = "1.0.2"
 tempfile = { version = "3.4.0" }
 rxqlite-tests-common = { version = "0.1" , path = "crates/rxqlite-tests-common" }
-
+futures = "0.3.30"
 
 [features]
 
