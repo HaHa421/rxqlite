@@ -604,3 +604,6 @@ pub use rxqlite_common::FromValueRef;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(feature = "test-dependency")]
+pub mod tests;

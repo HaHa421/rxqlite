@@ -5,13 +5,16 @@ use rxqlite_tests_common::*;
 use crate::typ;
 use crate::NodeId;
 use crate::client::RXQLiteClient;
+#[cfg(not(feature = "test-dependency"))]
 use tokio::runtime::Runtime;
 use crate::client::RXQLiteClientBuilder;
 use openraft::LogId;
 use futures::future::join_all;
 
+#[cfg(not(feature = "test-dependency"))]
 mod init_start;
 
+#[cfg(not(feature = "test-dependency"))]
 mod queries;
 
 #[cfg(target_os = "windows")]

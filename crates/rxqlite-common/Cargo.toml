@@ -1,20 +1,18 @@
 [package]
 name = "rxqlite-common"
-version = "0.1.0"
+version = "0.1.1"
 
 
 edition = "2021"
 authors = [
-    "drdr xp <drdr.xp@gmail.com>",
-    "Pedro Paulo de Amorim <pepa.amorim@gmail.com>",
-    "The Tremor Team",
+    "ha421 <hha835773@gmail.com>"
 ]
 categories = ["algorithms", "asynchronous", "data-structures"]
-description = "An example distributed key-value store built upon `openraft`."
-homepage = "https://github.com/datafuselabs/openraft"
-keywords = ["raft", "consensus"]
+description = "A distributed sqlite database built upon `openraft` ,`sqlx` and `sqlite`."
+homepage = "https://github.com/HaHa421/rxqlite"
+keywords = ["raft", "consensus","sqlite"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/datafuselabs/openraft"
+repository = "https://github.com/HaHa421/rxqlite"
 
 
 [dependencies]

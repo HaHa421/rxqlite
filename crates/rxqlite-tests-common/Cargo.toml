@@ -9,10 +9,10 @@ authors = [
 ]
 categories = ["algorithms", "asynchronous", "data-structures"]
 description = "A distributed sqlite database built upon `openraft` ,`sqlx` and `sqlite`."
-homepage = "https://github.com/datafuselabs/openraft"
+homepage = "https://github.com/HaHa421/rxqlite"
 keywords = ["raft", "consensus"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/datafuselabs/openraft"
+repository = "https://github.com/HaHa421/rxqlite"
 
 
 [dependencies]
