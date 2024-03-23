@@ -17,6 +17,6 @@ repository = "https://github.com/HaHa421/rxqlite"
 
 [dependencies]
 anyhow = "1"
-rxqlite-common = { version = "0.1" , path = "../rxqlite-common" }
+rxqlite-common = { version = "0.1.5" }
 rcgen="*"
 state = { version = "0.6" , features = [ "tls" ]}
