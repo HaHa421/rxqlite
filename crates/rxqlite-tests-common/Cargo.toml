@@ -19,3 +19,4 @@ repository = "https://github.com/datafuselabs/openraft"
 anyhow = "1"
 rxqlite-common = { version = "0.1" , path = "../rxqlite-common" }
 rcgen="*"
+state = { version = "0.6" , features = [ "tls" ]}

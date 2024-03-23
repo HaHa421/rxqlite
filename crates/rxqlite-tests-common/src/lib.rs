@@ -3,6 +3,36 @@ use std::process::{Command, Stdio , Child};
 use rcgen::generate_simple_self_signed;
 use std::collections::HashMap;
 
+use std::sync::{Arc, atomic::{AtomicU16, Ordering}};
+
+
+#[cfg(target_os = "windows")]
+const BASE_PORT:u16=21000;
+
+#[cfg(target_os = "linux")]
+const BASE_PORT:u16=22000;
+
+pub struct PortManager {
+  next_port : Arc<AtomicU16>,
+}
+
+impl Default for PortManager {
+  fn default()->Self {
+    Self {
+      next_port: Arc::new(AtomicU16::new(BASE_PORT)),
+    }
+  }
+}
+
+impl PortManager {
+  pub fn reserve(&self,port_count: usize)->u16 {
+    self.next_port.fetch_add(port_count as _,Ordering::Relaxed)
+  }
+}
+
+pub static PORT_MANAGER: state::InitCell<PortManager> = state::InitCell::new();
+
+
 #[derive(Default)]
 pub struct TestTlsConfig {
   pub accept_invalid_certificates: bool,
@@ -26,6 +56,7 @@ pub struct TestClusterManager {
   pub instances: HashMap<u64,Instance>,
   pub tls_config: Option<TestTlsConfig>,
   pub working_directory: std::path::PathBuf,
+  pub executable: String,
 }
 
 impl TestClusterManager {
@@ -34,11 +65,11 @@ impl TestClusterManager {
     working_directory: P,
     executable_path: P,
     host: &str,
-    base_port: u16,
     tls_config: Option<TestTlsConfig>,
     )-> anyhow::Result<Self> {
     std::fs::create_dir_all(&working_directory)?;
-    
+    let base_port = PORT_MANAGER.get_or_init(Default::default).reserve(instance_count<<1);
+  
     let (cert_path,key_path,accept_invalid_certificates) = if let Some(tls_config) = tls_config.as_ref() {
       let certs_path = working_directory.as_ref().join("certs-test");
       std::fs::create_dir_all(&certs_path)?;
@@ -61,8 +92,8 @@ impl TestClusterManager {
     let mut instances: HashMap<u64,Instance> = Default::default();
     
     
-    
-    
+    let executable= executable_path.as_ref();
+    let executable= executable.to_str().unwrap().to_string();
     for i in 0..instance_count {
       
       
@@ -70,9 +101,9 @@ impl TestClusterManager {
       let rpc_port= base_port + ((i<<1) + 1) as u16;
       let http_addr=format!("{}:{}",host,http_port);
       let rpc_addr=format!("{}:{}",host,rpc_port);
-      let executable= executable_path.as_ref();
-      let executable= executable.to_str().unwrap();
-      let mut cmd = Command::new(executable);
+      
+      
+      let mut cmd = Command::new(&executable);
       
         cmd
         //.stderr(Stdio::null())
@@ -123,6 +154,7 @@ impl TestClusterManager {
       instances,
       tls_config,
       working_directory:working_directory.as_ref().to_path_buf(),
+      executable,
     })
   }
   pub fn kill_all(&mut self)-> anyhow::Result<()> {
@@ -134,6 +166,15 @@ impl TestClusterManager {
     Ok(())
   }
   pub fn start(&mut self)-> anyhow::Result<()> {
+    for (node_id,instance) in self.instances.iter_mut() {
+      let mut cmd = Command::new(&self.executable);
+      
+      cmd.arg("--id")
+        .arg(&node_id.to_string())
+        .current_dir(&self.working_directory);
+      let child = cmd.spawn()?;
+      instance.child=Some(child);
+    }
     Ok(())
   }
   pub fn clean_directories(&self)->anyhow::Result<()> {
