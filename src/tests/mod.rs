@@ -81,6 +81,30 @@ impl TestManager {
   pub fn node_count(&self)->usize {
     self.tcm.instances.len()
   }
+  
+  pub async fn wait_for_cluster_established(&self,
+    node_id : NodeId,
+    reattempts: usize,
+  )->anyhow::Result<()> {
+    let mut reattempts = reattempts+1; // wait max for cluster to establish
+    
+    loop {
+      if let Ok(metrics) = self.get_metrics(node_id).await {
+        let voter_ids=metrics.membership_config.voter_ids();
+        if voter_ids.count() == self.node_count() {
+          return Ok(());
+        }
+        
+      }
+      reattempts-=1;
+      if reattempts == 0 {
+        break;
+      }
+      std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+    Err(anyhow::anyhow!("wait_for_cluster_established timeout"))
+  }
+  
 }
 
 #[test]
@@ -90,25 +114,8 @@ fn init_cluster() {
   
   let _= rt.block_on(async {
     let tm = TestManager::new("init_cluster",3);
-    //let mut metrics: HashMap<NodeId,typ::RaftMetrics> = Default::default();
     
-    let mut max_wait_loop = 2 * 60; // wait max for cluster to establish
-    
-    loop {
-      if let Ok(metrics) = tm.get_metrics(1).await {
-        let voter_ids=metrics.membership_config.voter_ids();
-        if voter_ids.count() == tm.node_count() {
-          break;
-        }
-        
-      }
-      max_wait_loop-=1;
-      assert_ne!(max_wait_loop,0);
-      std::thread::sleep(std::time::Duration::from_secs(1));
-    }
-    
-    //assert_eq!(metrics.len(),tcm.instances.len());
-    
+    tm.wait_for_cluster_established(1,60).await.unwrap();
     
   });
 }
@@ -122,42 +129,13 @@ fn start_cluster() {
     let mut tm = TestManager::new("start_cluster",3);
     //let mut metrics: HashMap<NodeId,typ::RaftMetrics> = Default::default();
     
-    let mut max_wait_loop = 2 * 60; // wait max for cluster to establish
-    
-    loop {
-      if let Ok(metrics) = tm.get_metrics(1).await {
-        let voter_ids=metrics.membership_config.voter_ids();
-        if voter_ids.count() == tm.node_count() {
-          break;
-        }
-        
-      }
-      max_wait_loop-=1;
-      assert_ne!(max_wait_loop,0);
-      std::thread::sleep(std::time::Duration::from_secs(1));
-    }
+    tm.wait_for_cluster_established(1,60).await.unwrap();
     
     tm.kill_all().unwrap();
     
     tm.start().unwrap();
     
-    let mut max_wait_loop = 2 * 60;
-    
-    loop {
-      if let Ok(metrics) = tm.get_metrics(1).await {
-        let voter_ids=metrics.membership_config.voter_ids();
-        if voter_ids.count() == tm.node_count() {
-          break;
-        }
-        
-      }
-      max_wait_loop-=1;
-      assert_ne!(max_wait_loop,0);
-      std::thread::sleep(std::time::Duration::from_secs(1));
-    }
-    
-    //assert_eq!(metrics.len(),tcm.instances.len());
-    
+    tm.wait_for_cluster_established(1,60).await.unwrap();
     
   });
 }
