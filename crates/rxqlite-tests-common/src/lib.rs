@@ -33,7 +33,7 @@ impl PortManager {
 pub static PORT_MANAGER: state::InitCell<PortManager> = state::InitCell::new();
 
 
-#[derive(Default)]
+#[derive(Default,Clone)]
 pub struct TestTlsConfig {
   pub accept_invalid_certificates: bool,
 }
