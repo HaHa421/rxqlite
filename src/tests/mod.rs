@@ -21,8 +21,14 @@ const BASE_PORT:u16=22000;
 
 
 pub fn default_cluster_manager()->anyhow::Result<TestClusterManager> {
-  let cargo_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-  let executable_path = cargo_path.join("target").join("release").join(format!("rxqlited{}",EXE_SUFFIX));
+  
+  let executable_path = if let Some(cargo_target_dir) = std::env::get("CARGO_TARGET_DIR") {
+    cargo_target_dir.join(format!("rxqlited{}",EXE_SUFFIX))
+  } else {
+    let cargo_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    cargo_path.join("target").join("release").join(format!("rxqlited{}",EXE_SUFFIX))
+  };
+  
   let temp_dir = env::temp_dir();
   let working_directory=temp_dir.join("init_cluster");
   TestClusterManager::new(
