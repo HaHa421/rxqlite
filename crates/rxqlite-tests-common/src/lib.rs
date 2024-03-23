@@ -1,5 +1,5 @@
 use std::path::{PathBuf,Path};
-use std::process::{Command, Stdio , Child};
+use std::process::{Command, /*Stdio ,*/ Child};
 use rcgen::generate_simple_self_signed;
 use std::collections::HashMap;
 
@@ -159,9 +159,25 @@ impl TestClusterManager {
   }
   pub fn kill_all(&mut self)-> anyhow::Result<()> {
     for (_,instance) in self.instances.iter_mut() {
-      if let Some(mut child) = instance.child.take() {
+      if let Some(child) = instance.child.as_mut() {
         child.kill()?;
       }
+    }
+    loop {
+      let mut done=true;
+      for (_,instance) in self.instances.iter_mut() {
+        if let Some(child) = instance.child.as_mut() {
+          if let Ok(Some(_exit_status))=child.try_wait() {
+            instance.child.take();
+          } else {
+            done = false;
+          }
+        }
+      }
+      if done {
+        break;
+      }
+      std::thread::sleep(std::time::Duration::from_millis(250));
     }
     Ok(())
   }
@@ -178,8 +194,12 @@ impl TestClusterManager {
     Ok(())
   }
   pub fn clean_directories(&self)->anyhow::Result<()> {
-    std::fs::remove_dir_all(&self.working_directory)?;
-    Ok(())
+    if let Err(err) = std::fs::remove_dir_all(&self.working_directory) {
+      eprintln!("error removing directory : {}({})",self.working_directory.display(),err);
+      Err(err.into())
+    } else {
+      Ok(())
+    }
   }
 }
 
