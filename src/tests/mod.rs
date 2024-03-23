@@ -6,6 +6,9 @@ use crate::typ;
 use crate::NodeId;
 use crate::client::RXQLiteClient;
 use tokio::runtime::Runtime;
+use crate::client::RXQLiteClientBuilder;
+
+mod init_start;
 
 #[cfg(target_os = "windows")]
 const EXE_SUFFIX:&str=".exe";
@@ -13,7 +16,10 @@ const EXE_SUFFIX:&str=".exe";
 #[cfg(not(target_os = "windows"))]
 const EXE_SUFFIX:&str="";
 
-pub fn get_cluster_manager(test_name: &str,instance_count: usize)->anyhow::Result<TestClusterManager> {
+pub fn get_cluster_manager(test_name: &str,
+  instance_count: usize,
+  tls_config: Option<TestTlsConfig>,
+  )->anyhow::Result<TestClusterManager> {
   
   let executable_path = if let Ok(rxqlited_dir) = std::env::var("RXQLITED_DIR") {
     
@@ -34,7 +40,7 @@ pub fn get_cluster_manager(test_name: &str,instance_count: usize)->anyhow::Resul
     &working_directory,
     &executable_path,
     "127.0.0.1",
-    None,
+    tls_config,
   )
 }
 
@@ -59,12 +65,25 @@ impl std::ops::DerefMut for TestManager {
 }
 
 impl TestManager {
-  pub fn new(test_name: &str,instance_count: usize)->Self {
-    let tcm = get_cluster_manager(test_name,instance_count).unwrap();
+  pub fn new(test_name: &str,
+    instance_count: usize,
+    tls_config: Option<TestTlsConfig>,
+    )->Self {
+    let tcm = get_cluster_manager(test_name,instance_count,tls_config.clone()).unwrap();
     let clients: HashMap<NodeId,RXQLiteClient> = tcm.instances.iter().map(|(node_id,instance)|
       (
         *node_id,
-        RXQLiteClient::new(instance.node_id, instance.http_addr.clone())
+        RXQLiteClientBuilder::new(instance.node_id, instance.http_addr.clone())
+          .use_tls(tls_config.is_some())
+          .accept_invalid_certificates(
+            if let Some(tls_config) = tls_config.as_ref() {
+              tls_config.accept_invalid_certificates
+            } else {
+              false
+            }
+          )
+          .build()
+        
       )
     ).collect();
     Self {
@@ -107,35 +126,3 @@ impl TestManager {
   
 }
 
-#[test]
-fn init_cluster() {
-  
-  let rt = Runtime::new().unwrap();
-  
-  let _= rt.block_on(async {
-    let tm = TestManager::new("init_cluster",3);
-    
-    tm.wait_for_cluster_established(1,60).await.unwrap();
-    
-  });
-}
-
-#[test]
-fn start_cluster() {
-  
-  let rt = Runtime::new().unwrap();
-  
-  let _= rt.block_on(async {
-    let mut tm = TestManager::new("start_cluster",3);
-    //let mut metrics: HashMap<NodeId,typ::RaftMetrics> = Default::default();
-    
-    tm.wait_for_cluster_established(1,60).await.unwrap();
-    
-    tm.kill_all().unwrap();
-    
-    tm.start().unwrap();
-    
-    tm.wait_for_cluster_established(1,60).await.unwrap();
-    
-  });
-}

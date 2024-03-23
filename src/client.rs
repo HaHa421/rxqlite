@@ -32,7 +32,9 @@ use crate::ConnectOptions;
 pub struct RXQLiteClientBuilder {
   leader_id: NodeId,
   leader_addr: String,
-  tls_config: Option<RSQliteClientTlsConfig>,
+  //tls_config: Option<RSQliteClientTlsConfig>,
+  use_tls: bool,
+  accept_invalid_certificates: bool,
 }
 
 impl RXQLiteClientBuilder {
@@ -41,19 +43,33 @@ impl RXQLiteClientBuilder {
     Self {
       leader_id,
       leader_addr,
-      tls_config: None,
+      //tls_config: None,
+      use_tls: false,
+      accept_invalid_certificates:false,
     }
   }
   pub fn tls_config(mut self,tls_config: Option<RSQliteClientTlsConfig>)->Self {
-    self.tls_config = tls_config;
+    if let Some(tls_config) = tls_config {
+      self.use_tls=true;
+      self.accept_invalid_certificates = tls_config.accept_invalid_certificates;
+    } else {
+      self.use_tls=false;
+      self.accept_invalid_certificates = false;
+    }
     self
   }
-  
+  pub fn use_tls(mut self,use_tls: bool)->Self {
+    self.use_tls = use_tls;
+    self
+  }
+  pub fn accept_invalid_certificates(mut self,accept_invalid_certificates: bool)->Self {
+    self.accept_invalid_certificates = accept_invalid_certificates;
+    self
+  }
   pub fn build(self)->RXQLiteClient {
     let mut inner = ClientBuilder::new();
-    let use_tls = if let Some(tls_config) = self.tls_config {
-      inner = inner.use_rustls_tls();
-      if tls_config.accept_invalid_certificates {
+    let use_tls = if self.use_tls {
+      if self.accept_invalid_certificates {
         inner = inner.danger_accept_invalid_certs(true);
       }
       true
