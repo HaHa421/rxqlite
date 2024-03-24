@@ -129,7 +129,7 @@ the parameter accept-invalid-certificates lets rxqlited accept invalid certifica
 
 Again, on subsequent cluster runs you dont need to pass all the initialisation parameters.
 One needs only to provide node_id (provided that the data dir is 
-the default ./data-{node-id} wich is not an option in the current release) as shown in
+the default ./data-{node-id} which is not an option in the current release) as shown in
 ha-start-cluster.sh
 
 ## License
