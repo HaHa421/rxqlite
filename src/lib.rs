@@ -147,38 +147,13 @@ pub struct InstanceParams {
   tls_config: Option<RSQliteNodeTlsConfig>,
 }
 
-pub async fn init_example_raft_node<P>(
-    node_id: NodeId,
-    base_dir: P,
-    leader: bool,
-    http_addr: Option<String>,
-    rpc_addr: Option<String>,
-    members : Vec<(NodeId,String,String)>,
-    tls_config: Option<RSQliteNodeTlsConfig>,
-    
-) -> anyhow::Result<()>
+async fn init_rxqlite<P>(
+  node_id: NodeId,
+  base_dir: P,
+  instance_params: InstanceParams) -> anyhow::Result<(Arc<App>,tokio::task::JoinHandle<()>)>
 where
     P: AsRef<Path>,
 {
-  if http_addr.is_none() {
-    return Err(anyhow::anyhow!("http_addr must be sepcified on server initialization"));
-  }
-  if rpc_addr.is_none() {
-    return Err(anyhow::anyhow!("rpc_addr must be sepcified on server initialization"));
-  }
-  std::fs::create_dir_all(&base_dir)?;
-  
-  let instance_params = InstanceParams {
-    http_addr:http_addr.unwrap(),
-    rpc_addr:rpc_addr.unwrap(),
-    tls_config
-  };
-  
-    
-  let instance_params_json=serde_json::to_string(&instance_params)?;
-  
-  tokio::fs::write(base_dir.as_ref().join("instance_params.json"),instance_params_json.as_bytes()).await?;
-  
   let rocksdb_dir = base_dir.as_ref().join("rocksdb");
   let sqlite_path = base_dir.as_ref().join("sqlite.db");
     
@@ -258,7 +233,7 @@ where
       handle
     };
     
-    let execute_consistent_query = warp::post()
+  let execute_consistent_query = warp::post()
         .and(warp::path!("api" / "sql-consistent"))
         .and(warp::body::json())
         .and(with_app(app.clone()))
@@ -287,13 +262,7 @@ where
         .and(warp::body::json())
         .and(with_app(app.clone()))
       .and_then(management::change_membership);
-    /*
-    let management_init = warp::post()
-        .and(warp::path!("cluster" / "init"))
-        .and(warp::body::json())
-        .and(with_app(app.clone()))
-      .and_then(management::init);
-    */
+    
     let management_metrics = warp::get()
         .and(warp::path!("cluster" / "metrics"))
         .and(with_app(app.clone()))
@@ -330,11 +299,51 @@ where
             }
     });
     
+  Ok((app,handle))
+}
+
+pub async fn init_example_raft_node<P>(
+    node_id: NodeId,
+    base_dir: P,
+    leader: bool,
+    http_addr: Option<String>,
+    rpc_addr: Option<String>,
+    members : Vec<(NodeId,String,String)>,
+    tls_config: Option<RSQliteNodeTlsConfig>,
+    
+) -> anyhow::Result<()>
+where
+    P: AsRef<Path>,
+{
+  if http_addr.is_none() {
+    return Err(anyhow::anyhow!("http_addr must be sepcified on server initialization"));
+  }
+  if rpc_addr.is_none() {
+    return Err(anyhow::anyhow!("rpc_addr must be sepcified on server initialization"));
+  }
+  std::fs::create_dir_all(&base_dir)?;
+  let http_addr = http_addr.unwrap();
+  let rpc_addr = rpc_addr.unwrap();
+  let instance_params = InstanceParams {
+    http_addr:http_addr.clone(),
+    rpc_addr:rpc_addr.clone(),
+    tls_config
+  };
+  
+    
+  let instance_params_json=serde_json::to_string(&instance_params)?;
+  
+  tokio::fs::write(base_dir.as_ref().join("instance_params.json"),instance_params_json.as_bytes()).await?;
+  
+    let (app,handle) = init_rxqlite(node_id,base_dir,instance_params).await?;
+    
+    
+    
     if leader {
       let mut nodes = BTreeMap::new();
       let node = Node {
-          api_addr: instance_params.http_addr.clone(),
-          rpc_addr: instance_params.rpc_addr.clone(),
+          api_addr: http_addr,
+          rpc_addr: rpc_addr,
           //tls_config:tls_config.clone(),
       };
       nodes.insert(app.id, node);
@@ -415,158 +424,7 @@ where
     let instance_params: InstanceParams = serde_json::from_str(&tls_instance_params_json)?;
     
     
-    let rocksdb_dir = base_dir.as_ref().join("rocksdb");
-    let sqlite_path = base_dir.as_ref().join("sqlite.db");
-    
-    // Create a configuration for the raft instance.
-    let config = Config {
-        heartbeat_interval: 250,
-        election_timeout_min: 299,
-        ..Default::default()
-    };
-    
-    let config = Arc::new(config.validate().unwrap());
-    
-    let (log_store, state_machine_store) = new_storage(&rocksdb_dir,&sqlite_path).await?;
-    
-    let sqlite_and_path = state_machine_store.data.sqlite_and_path.clone();
-    
-    // Create the network layer that will connect and communicate the raft instances and
-    // will be used in conjunction with the store created above.
-    let network = Network {
-      tls_config: instance_params.tls_config.clone(),
-    };
-
-    // Create a local raft instance.
-    let raft = openraft::Raft::new(node_id, config.clone(), network, log_store, state_machine_store).await.unwrap();
-    
-    let app = Arc::new(App {
-        id: node_id,
-        api_addr: instance_params.http_addr.clone(),
-        rpc_addr: instance_params.rpc_addr.clone(),
-        raft,
-        //key_values: kvs,
-        sqlite_and_path,
-        config,
-    });
-
-    let echo_service = Arc::new(network::raft::Raft::new(app.clone()));
-    
-    
-    let mut server_builder = toy_rpc_ha421::Server::builder();
-    let handle = if let Some(tls_config) = instance_params.tls_config.as_ref() {
-      let certs = rustls_pemfile::certs(&mut BufReader::new(&mut File::open(&tls_config.cert_path)?))?
-        .into_iter().map(|x|rustls::pki_types::CertificateDer::from(x)).collect::<Vec<_>>();
-      let mut private_keys =
-        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tls_config.key_path)?))?
-            ;
-            /*
-      let certs = load_certs(&tls_config.cert_path).unwrap();
-      let mut keys = load_keys(&tls_config.key_path).unwrap();
-            */
-      let config_builder : ConfigBuilder<ServerConfig, WantsServerCert> = ServerConfig::builder()
-        //.with_safe_defaults()
-        .with_no_client_auth();
-        
-      let config = config_builder.with_single_cert(certs, rustls::pki_types::PrivatePkcs8KeyDer::from(private_keys.remove(0)).into())?;
-      /*
-      if tls_config.accept_invalid_cert {
-        config.dangerous().set_certificate_verifier(Arc::new(AllowAnyCertVerifier));
-      }
-      */
-      server_builder=server_builder.register(echo_service);
-      let server = server_builder.build();
-      
-      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
-      
-      let handle = task::spawn(async move {
-          server.accept_with_tls_config(listener, config).await.unwrap();
-      });
-      handle  
-    } else {
-      server_builder=server_builder.register(echo_service);
-      let server = server_builder.build();
-      
-      let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
-      
-      let handle = task::spawn(async move {
-          server.accept_websocket(listener).await.unwrap();
-      });
-      handle
-    };
-
-    
-    
-    let execute_query = warp::post()
-        .and(warp::path!("api" / "sql"))
-        .and(warp::body::json())
-        .and(with_app(app.clone()))
-        .and_then(
-          |arg0 : Message, arg1: Arc<App>| api::sql(arg0, arg1)
-        )
-        ;
-    let execute_consistent_query = warp::post()
-        .and(warp::path!("api" / "sql-consistent"))
-        .and(warp::body::json())
-        .and(with_app(app.clone()))
-        .and_then(
-          |arg0 : Message, arg1: Arc<App>| api::sql_consistent(arg0, arg1)
-        )
-        ;
-        
-    let management_add_learner = warp::post()
-        .and(warp::path!("cluster" / "add-learner"))
-        .and(warp::body::json())
-        .and(with_app(app.clone()))
-      .and_then(management::add_learner);
-    
-    let management_change_membership = warp::post()
-        .and(warp::path!("cluster" / "change-membership"))
-        .and(warp::body::json())
-        .and(with_app(app.clone()))
-      .and_then(management::change_membership);
-    /*
-    let management_init = warp::post()
-        .and(warp::path!("cluster" / "init"))
-        .and(warp::body::json())
-        .and(with_app(app.clone()))
-      .and_then(management::init);
-    */
-    let management_metrics = warp::get()
-        .and(warp::path!("cluster" / "metrics"))
-        .and(with_app(app.clone()))
-        .and_then(management::metrics);
-
-    let management_snapshot = warp::post()
-        .and(warp::path!("cluster" / "snapshot"))
-        .and(warp::body::json())
-        .and(with_app(app.clone()))
-      .and_then(management::snapshot);
-      
-    let routes = execute_query
-      .or(execute_consistent_query)
-      .or(management_add_learner)
-      .or(management_change_membership)
-      //.or(management_init)
-      .or(management_metrics)
-      .or(management_snapshot);
-
-    let _server = tokio::spawn(async move {
-            if let Some(tls_config) = instance_params.tls_config.as_ref() {
-              warp::serve(routes)
-                .tls()
-                .cert_path(&tls_config.cert_path)
-                .key_path(&tls_config.key_path)
-                .run(SocketAddr::from_str(&instance_params.http_addr).unwrap())
-                .await;
-              
-            } else {
-              warp::serve(routes)
-                .run(SocketAddr::from_str(&instance_params.http_addr).unwrap())
-                .await;
-            }
-    });
-    
+    let (_,handle) = init_rxqlite(node_id,base_dir,instance_params).await?;
     
     _ = handle.await;
     Ok(())

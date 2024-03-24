@@ -307,7 +307,7 @@ impl RXQLiteClient {
     /// membership config, replication status etc.
     /// See [`RaftMetrics`].
     pub async fn node_metrics(&self) -> Result<RaftMetrics<NodeId, Node>, typ::RPCError> {
-        self.do_send_rpc_to_node("cluster/metrics", None::<&()>).await
+        self.do_send_rpc_to_node(&self.node,"cluster/metrics", None::<&()>).await
     }
     
     // --- Internal methods
@@ -319,6 +319,7 @@ impl RXQLiteClient {
     /// An `Err` happened on remote will be wrapped in an [`RPCError::RemoteError`].
     async fn do_send_rpc_to_node<Req, Resp, Err>(
         &self,
+        dest_node: &Arc<Mutex<(NodeId, String)>>,
         uri: &str,
         req: Option<&Req>,
     ) -> Result<Resp, RPCError<NodeId, Node, Err>>
@@ -328,7 +329,7 @@ impl RXQLiteClient {
         Err: std::error::Error + Serialize + DeserializeOwned,
     {
         let (node_id, url) = {
-            let t = self.node.lock().unwrap();
+            let t = dest_node.lock().unwrap();
             let target_addr = &t.1;
         (t.0, format!("{}://{}/{}", if self.use_tls {"https" } else { "http" },target_addr, uri))
         };
@@ -374,35 +375,7 @@ impl RXQLiteClient {
         Resp: Serialize + DeserializeOwned,
         Err: std::error::Error + Serialize + DeserializeOwned,
     {
-        let (leader_id, url) = {
-            let t = self.leader.lock().unwrap();
-            let target_addr = &t.1;
-        (t.0, format!("{}://{}/{}", if self.use_tls {"https" } else { "http" },target_addr, uri))
-        };
-
-        let resp = if let Some(r) = req {
-            println!(
-                ">>> client send request to {}: {}",
-                url,
-                serde_json::to_string_pretty(&r).unwrap()
-            );
-            self.inner.post(url.clone()).json(r)
-        } else {
-            println!(">>> client send request to {}", url,);
-            self.inner.get(url.clone())
-        }
-        .send()
-        .await
-        .map_err(|e| RPCError::Network(NetworkError::new(&e)))?;
-
-        let res: Result<Resp, Err> = resp.json().await.map_err(|e| RPCError::Network(NetworkError::new(&e)))?;
-        println!(
-            "<<< client recv reply from {}: {}",
-            url,
-            serde_json::to_string_pretty(&res).unwrap()
-        );
-
-        res.map_err(|e| RPCError::RemoteError(RemoteError::new(leader_id, e)))
+        self.do_send_rpc_to_node(&self.leader,uri,req).await
     }
 
     /// Try the best to send a request to the leader.
