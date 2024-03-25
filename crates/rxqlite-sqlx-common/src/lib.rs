@@ -2,7 +2,7 @@
 #![deny(warnings)]
 
 #[cfg(feature = "sqlite")]
-use sqlx::Sqlite;
+use sqlx_sqlite_cipher::Sqlite;
 #[cfg(feature = "sqlite")]
 pub type SqlxDb = Sqlite;
 

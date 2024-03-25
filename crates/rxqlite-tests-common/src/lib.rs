@@ -58,6 +58,7 @@ pub struct TestClusterManager {
   pub working_directory: std::path::PathBuf,
   pub executable: String,
   pub keep_temp_directories: bool,
+  pub key_path: String, // empty if not used
 }
 
 impl TestClusterManager {
@@ -157,6 +158,7 @@ impl TestClusterManager {
       working_directory:working_directory.as_ref().to_path_buf(),
       executable,
       keep_temp_directories: false,
+      key_path,
     })
   }
   pub fn kill_all(&mut self)-> anyhow::Result<()> {

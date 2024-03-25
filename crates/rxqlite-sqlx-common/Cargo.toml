@@ -1,6 +1,6 @@
 [package]
 name = "rxqlite-sqlx-common"
-version = "0.1.1"
+version = "0.1.2"
 
 edition = "2021"
 authors = [
@@ -20,7 +20,12 @@ sqlparser=  "0.44"
 
 [dependencies.sqlx]
 version = "0.7"
-features = ["runtime-tokio-rustls" , "chrono"]
+features = ["runtime-tokio-rustls" , "chrono" ]
+
+[dependencies.sqlx-sqlite-cipher]
+version = "0.7"
+#path = "../../../sqlx-sqlite-cipher"
+
 
 [dependencies.sqlx-core]
 version = "0.7"
