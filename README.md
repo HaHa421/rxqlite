@@ -1,7 +1,7 @@
 <h1 align="center">RXQLite</h1>
 <div align="center">
  <strong>
-   A distributed SQLite Database
+   A secure distributed SQLite Database
  </strong>
 </div>
 <br />
@@ -36,7 +36,7 @@
     <img src="https://img.shields.io/crates/v/rxqlite.svg?style=flat-square"
     alt="Crates.io version" /></a>
   
-  [![CI](https://github.com/HaHa421/rxqlite/actions/workflows/ci.yaml/badge.svg?branch=openraft-0.9)](https://github.com/HaHa421/rxqlite/actions/workflows/ci.yaml)
+  [![CI](https://github.com/HaHa421/rxqlite/actions/workflows/ci.yaml/badge.svg?branch=byc)](https://github.com/HaHa421/rxqlite/actions/workflows/ci.yaml)
   
 </div>
 
