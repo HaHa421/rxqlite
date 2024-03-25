@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - 'openraft-0.9'
+      - 'byc'
     tags:
       - 'v*'
 
