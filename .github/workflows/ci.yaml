@@ -158,7 +158,7 @@ jobs:
       run: 7z a ${{ env.ARTIFACT_ARCHIVE }} ./target/${{ env.TARGET_TRIPLE }}/release/${{ env.BINARY_NAME }}.exe
       
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ runner.os }}-artifact
         path: ${{ env.ARTIFACT_ARCHIVE }}
