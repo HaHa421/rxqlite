@@ -69,7 +69,7 @@ version = "0.7"
 features = ["runtime-tokio-rustls" , "chrono" ]
 
 [dependencies.sqlx-sqlite-cipher]
-path = "../sqlx-sqlite-cipher"
+#path = "../sqlx-sqlite-cipher"
 version = "0.7"
 
 
