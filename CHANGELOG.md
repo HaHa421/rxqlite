@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.7] - 2024-03-25
+optimized and upgraded detabases encryption to AES-GCM-SIV
+
+## [0.1.6] - 2024-03-25
+Added initial databases encryption
+
 ## [0.1.5] - 2024-03-23
 Added initial test infrastructure
 
