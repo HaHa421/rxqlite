@@ -49,7 +49,7 @@ use std::io::BufReader;
 use serde::{Serialize,Deserialize};
 
 #[cfg(feature = "sqlcipher")]
-use crate::cipher::ring::Aes256GcmEncryptor;
+use crate::cipher::aes_gcm_siv::Aes256GcmSivEncryptor;
 #[cfg(feature = "sqlcipher")]
 use ring::digest;
 #[cfg(feature = "sqlcipher")]
@@ -183,7 +183,7 @@ where
         
         let private_key = rustls::pki_types::PrivatePkcs8KeyDer::from(private_key_bytes);
         
-        let encrypt_data = Aes256GcmEncryptor::new(&private_key);
+        let encrypt_data = Aes256GcmSivEncryptor::new(&private_key);
         
         
         

@@ -197,8 +197,8 @@ impl StateMachineStore {
             })?;
         match encrypted_data {
           Some(mut encrypted_data)=> {
-            let r=self.encrypt_data.decrypt(&mut encrypted_data)?;
-            Ok(serde_json::from_slice(&encrypted_data[r.start..r.end]).ok())
+            self.encrypt_data.decrypt(&mut encrypted_data)?;
+            Ok(serde_json::from_slice(&encrypted_data).ok())
           }
           None=>{
             Ok(None)
@@ -345,8 +345,8 @@ impl LogStore {
           return Ok(None);
         }      
         let mut encrypted_data = encrypted_data.unwrap();
-        let r=self.encrypt_data.decrypt(&mut encrypted_data)?;
-        Ok(serde_json::from_slice(&encrypted_data[r.start..r.end]).ok())
+        self.encrypt_data.decrypt(&mut encrypted_data)?;
+        Ok(serde_json::from_slice(&encrypted_data).ok())
     }
 
     fn set_last_purged_(&self, log_id: LogId<u64>) -> StorageResult<()> {
@@ -386,8 +386,8 @@ impl LogStore {
           return Ok(None);
         }
         let mut encrypted_data = encrypted_data.unwrap();
-        let r=self.encrypt_data.decrypt(&mut encrypted_data)?;
-        Ok(serde_json::from_slice(&encrypted_data[r.start..r.end]).ok())
+        self.encrypt_data.decrypt(&mut encrypted_data)?;
+        Ok(serde_json::from_slice(&encrypted_data).ok())
     }
 
     fn set_vote_(&self, vote: &Vote<NodeId>) -> StorageResult<()> {
@@ -416,8 +416,8 @@ impl LogStore {
         return Ok(None);
       }
       let mut encrypted_data = encrypted_data.unwrap();
-      let r=self.encrypt_data.decrypt(&mut encrypted_data)?;
-      Ok(serde_json::from_slice(&encrypted_data[r.start..r.end]).ok())
+      self.encrypt_data.decrypt(&mut encrypted_data)?;
+      Ok(serde_json::from_slice(&encrypted_data).ok())
     }
 }
 
@@ -434,17 +434,19 @@ impl RaftLogReader<TypeConfig> for LogStore {
         self.db
             .iterator_cf(self.logs(), rocksdb::IteratorMode::From(&start, Direction::Forward))
             .map(|res| {
-                let (id, mut val) = res.unwrap();
+                let (id, val) = res.unwrap();
                 /*
                 let val=match self.encrypt_data.decrypt(Some(val.to_vec())) {
                   Ok(val)=>val.unwrap(),
                   Err(err)=>return (bin_to_id(&id),Err(err.into())),
                 };
                 */
+                let mut val = val.into_vec();
                 let entry: StorageResult<Entry<_>> = 
+                  
                   match self.encrypt_data.decrypt(&mut val) {
-                    Ok(r)=> {
-                      serde_json::from_slice(&val[r.start..r.end]).map_err(|e| 
+                    Ok(_)=> {
+                      serde_json::from_slice(&val).map_err(|e| 
                         StorageError::IO {
                         source: StorageIOError::read_logs(&e),
                       })
@@ -479,10 +481,11 @@ impl RaftLogStorage<TypeConfig> for LogStore {
 
     async fn get_log_state(&mut self) -> StorageResult<LogState<TypeConfig>> {
         let last = self.db.iterator_cf(self.logs(), rocksdb::IteratorMode::End).next().and_then(|res| {
-            let (_, mut ent) = res.unwrap();
+            let (_, ent) = res.unwrap();
+            let mut ent = ent.into_vec();
             match self.encrypt_data.decrypt(&mut ent) {
-              Ok(r)=> {
-                Some(Ok(serde_json::from_slice::<Entry<TypeConfig>>(&ent[r.start..r.end]).ok()?.log_id))
+              Ok(_)=> {
+                Some(Ok(serde_json::from_slice::<Entry<TypeConfig>>(&ent).ok()?.log_id))
               }
               Err(err)=>return Some(Err::<_,StorageError<NodeId>>(err.into())),
             }

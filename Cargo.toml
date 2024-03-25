@@ -1,6 +1,6 @@
 [package]
 name = "rxqlite"
-version = "0.1.6"
+version = "0.1.7"
 readme = "README.md"
 
 edition = "2021"
@@ -80,6 +80,10 @@ version = "0.7"
 version = "0.9"
 optional = true
 
+[dependencies.aes-gcm-siv]
+version = "0.11.1"
+optional = true
+
 [dependencies.ring]
 version = "0.17"
 optional = true
@@ -99,7 +103,7 @@ rxqlite-tests-common = { version = "0.1" , path = "crates/rxqlite-tests-common" 
 [features]
 default = [ "bundled-sqlcipher-vendored-openssl"  ]
 test-dependency = [ "futures" , "rxqlite-tests-common" ]
-sqlcipher = [ "sqlx-sqlite-cipher/sqlcipher" , "rsa-crate" , "ring" , "base64" ]
+sqlcipher = [ "sqlx-sqlite-cipher/sqlcipher" , "rsa-crate" , "ring" , "base64" , "aes-gcm-siv" ]
 bundled-sqlcipher = [ "sqlx-sqlite-cipher/bundled-sqlcipher" , "sqlcipher" ]
 bundled-sqlcipher-vendored-openssl = [ "sqlx-sqlite-cipher/bundled-sqlcipher-vendored-openssl" , "sqlcipher" ]
 
