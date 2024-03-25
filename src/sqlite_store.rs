@@ -195,9 +195,15 @@ impl StateMachineStore {
             .map_err(|e| StorageError::IO {
                 source: StorageIOError::read(&e),
             })?;
-        let decrypted_data=self.encrypt_data.decrypt(encrypted_data)?;
-        Ok(decrypted_data.and_then(|v|serde_json::from_slice(&v).ok()))
-        
+        match encrypted_data {
+          Some(mut encrypted_data)=> {
+            let r=self.encrypt_data.decrypt(&mut encrypted_data)?;
+            Ok(serde_json::from_slice(&encrypted_data[r.start..r.end]).ok())
+          }
+          None=>{
+            Ok(None)
+          }
+        }
     }
 
     fn set_current_snapshot_(&self, snap: StoredSnapshot) -> StorageResult<()> {
@@ -335,8 +341,12 @@ impl LogStore {
             .db
             .get_cf(self.store(), b"last_purged_log_id")
             .map_err(|e| StorageIOError::read(&e))?;
-        let decrypted_data=self.encrypt_data.decrypt(encrypted_data)?;
-        Ok(decrypted_data.and_then(|v|serde_json::from_slice(&v).ok()))
+        if encrypted_data.is_none() {
+          return Ok(None);
+        }      
+        let mut encrypted_data = encrypted_data.unwrap();
+        let r=self.encrypt_data.decrypt(&mut encrypted_data)?;
+        Ok(serde_json::from_slice(&encrypted_data[r.start..r.end]).ok())
     }
 
     fn set_last_purged_(&self, log_id: LogId<u64>) -> StorageResult<()> {
@@ -372,9 +382,12 @@ impl LogStore {
             .map_err(|e| StorageError::IO {
                 source: StorageIOError::read(&e),
             })?;
-        let decrypted_data=self.encrypt_data.decrypt(encrypted_data)?;
-        Ok(decrypted_data.and_then(|v|serde_json::from_slice(&v).ok()))
-            
+        if encrypted_data.is_none() {
+          return Ok(None);
+        }
+        let mut encrypted_data = encrypted_data.unwrap();
+        let r=self.encrypt_data.decrypt(&mut encrypted_data)?;
+        Ok(serde_json::from_slice(&encrypted_data[r.start..r.end]).ok())
     }
 
     fn set_vote_(&self, vote: &Vote<NodeId>) -> StorageResult<()> {
@@ -399,8 +412,12 @@ impl LogStore {
           .map_err(|e| StorageError::IO {
               source: StorageIOError::write_vote(&e),
           })?;
-      let decrypted_data=self.encrypt_data.decrypt(encrypted_data)?;
-      Ok(decrypted_data.and_then(|v|serde_json::from_slice(&v).ok()))
+      if encrypted_data.is_none() {
+        return Ok(None);
+      }
+      let mut encrypted_data = encrypted_data.unwrap();
+      let r=self.encrypt_data.decrypt(&mut encrypted_data)?;
+      Ok(serde_json::from_slice(&encrypted_data[r.start..r.end]).ok())
     }
 }
 
@@ -417,16 +434,33 @@ impl RaftLogReader<TypeConfig> for LogStore {
         self.db
             .iterator_cf(self.logs(), rocksdb::IteratorMode::From(&start, Direction::Forward))
             .map(|res| {
-                let (id, val) = res.unwrap();
-                
+                let (id, mut val) = res.unwrap();
+                /*
                 let val=match self.encrypt_data.decrypt(Some(val.to_vec())) {
                   Ok(val)=>val.unwrap(),
                   Err(err)=>return (bin_to_id(&id),Err(err.into())),
                 };
+                */
+                let entry: StorageResult<Entry<_>> = 
+                  match self.encrypt_data.decrypt(&mut val) {
+                    Ok(r)=> {
+                      serde_json::from_slice(&val[r.start..r.end]).map_err(|e| 
+                        StorageError::IO {
+                        source: StorageIOError::read_logs(&e),
+                      })
+                    }
+                    Err(err)=> {
+                      Err(StorageError::IO {
+                        source: StorageIOError::read_logs(&err),
+                      })
+                    }
+                  };
                 //tracing::error!("log _entry json:{}",String::from_utf8_lossy(&val));
+                /*
                 let entry: StorageResult<Entry<_>> = serde_json::from_slice(&val).map_err(|e| StorageError::IO {
                     source: StorageIOError::read_logs(&e),
                 });
+                */
                 let id = bin_to_id(&id);
                 if let Err(err) = &entry {
                   tracing::error!("{}",err);
@@ -445,12 +479,14 @@ impl RaftLogStorage<TypeConfig> for LogStore {
 
     async fn get_log_state(&mut self) -> StorageResult<LogState<TypeConfig>> {
         let last = self.db.iterator_cf(self.logs(), rocksdb::IteratorMode::End).next().and_then(|res| {
-            let (_, ent) = res.unwrap();
-            let ent=match self.encrypt_data.decrypt(Some(ent.to_vec())) {
-              Ok(ent)=>ent.unwrap(),
+            let (_, mut ent) = res.unwrap();
+            match self.encrypt_data.decrypt(&mut ent) {
+              Ok(r)=> {
+                Some(Ok(serde_json::from_slice::<Entry<TypeConfig>>(&ent[r.start..r.end]).ok()?.log_id))
+              }
               Err(err)=>return Some(Err::<_,StorageError<NodeId>>(err.into())),
-            };
-            Some(Ok(serde_json::from_slice::<Entry<TypeConfig>>(&ent).ok()?.log_id))
+            }
+            
         });
       
         let last_purged_log_id = self.get_last_purged_()?;

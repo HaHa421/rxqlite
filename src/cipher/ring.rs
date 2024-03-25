@@ -48,26 +48,22 @@ impl EncryptData for Aes256GcmEncryptor {
         Ok(encrypted_data)
     }
 
-    fn decrypt(&self,data: Option<Vec<u8>>) -> Result<Option<Vec<u8>>,StorageIOError> {
-      match data {
-        None=>Ok(None),
-        Some(data)=>{
-          let nonce = &data[..12];
-          let mut decrypted_data = data[12..].to_vec();
-          
-          let nonce = Nonce::assume_unique_for_key(nonce.try_into()
-            .map_err(|err| StorageIOError::read_logs(&err))?
-          );
-          let decrypted_data = self.less_safe_key.open_in_place(nonce, Aad::empty(), &mut decrypted_data).map_err(|err|StorageIOError::read_logs(&std::io::Error::new(
-          std::io::ErrorKind::Other,format!("{}",err).as_str()
-        )))?;
-    
-          /*
-          let decrypted_data = self.private_key.decrypt(padding, &data[..]).map_err(|err| StorageIOError::read_logs(&err))?;
-          */
-          Ok(Some(decrypted_data.to_vec()))
-        }
-      }
+    fn decrypt(&self,data: &mut [u8]) -> Result<Range<usize>,StorageIOError> {
+      let nonce = &data[..12];
+      let nonce = Nonce::assume_unique_for_key(nonce.try_into()
+        .map_err(|err| StorageIOError::read_logs(&err))?
+      );
+      let decrypted_data = &mut data[12..];
+      
+      
+      let decrypted_data = self.less_safe_key.open_in_place(nonce, Aad::empty(),decrypted_data).map_err(|err|StorageIOError::read_logs(&std::io::Error::new(
+      std::io::ErrorKind::Other,format!("{}",err).as_str()
+    )))?;
+
+      /*
+      let decrypted_data = self.private_key.decrypt(padding, &data[..]).map_err(|err| StorageIOError::read_logs(&err))?;
+      */
+      Ok(12..(12+decrypted_data.len()))
     }
 }
 
