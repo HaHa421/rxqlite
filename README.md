@@ -110,6 +110,8 @@ to ease the use of rxqlite using sqlx (https://github.com/launchbadge/sqlx)
 
 ## Security
 
+WARNING: this database has not yet received any ITSA (Independent Third-party Security Audit)
+
 This version of rxqlited supports tls in an insecure mode: 
   It accepts invalid certificates (this includes self-signed certificates)
 

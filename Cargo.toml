@@ -66,18 +66,44 @@ rxqlite-tests-common = { version = "0.1" , path = "crates/rxqlite-tests-common" 
 
 [dependencies.sqlx]
 version = "0.7"
-features = ["runtime-tokio-rustls" , "chrono" , "sqlite"]
+features = ["runtime-tokio-rustls" , "chrono" ]
+
+[dependencies.sqlx-sqlite-cipher]
+path = "../sqlx-sqlite-cipher"
+version = "0.7"
+
 
 [dependencies.sqlx-core]
 version = "0.7"
 
+[dependencies.rsa]
+version = "0.9"
+optional = true
+
+[dependencies.ring]
+version = "0.17"
+optional = true
+
+[dependencies.base64]
+version = "0.22"
+optional = true
+
+[dependencies.rand]
+version = "0.8"
+optional = true
 
 [dev-dependencies]
 futures = { version = "0.3.30" }
 rxqlite-tests-common = { version = "0.1" , path = "crates/rxqlite-tests-common" }
 
 [features]
+default = [ "bundled-sqlcipher-vendored-openssl"  ]
 test-dependency = [ "futures" , "rxqlite-tests-common" ]
+sqlcipher = [ "sqlx-sqlite-cipher/sqlcipher" , "rsa-crate" , "ring" , "base64" ]
+bundled-sqlcipher = [ "sqlx-sqlite-cipher/bundled-sqlcipher" , "sqlcipher" ]
+bundled-sqlcipher-vendored-openssl = [ "sqlx-sqlite-cipher/bundled-sqlcipher-vendored-openssl" , "sqlcipher" ]
+
+rsa-crate = [ "rsa" , "rand" ]
 
 [package.metadata.docs.rs]
 all-features = true

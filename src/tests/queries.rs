@@ -1,13 +1,20 @@
 use super::*;
 use rxqlite_common::{Message,MessageResponse};
 use sqlx::types::chrono::{DateTime,Utc};
-use sqlx::{SqlitePool,Row};
+use sqlx::{Pool,Row};
+use sqlx_sqlite_cipher::{Sqlite};
+
+use ring::digest;
+use base64::{engine::general_purpose::URL_SAFE, Engine as _};
+use std::fs::File;
+use std::io::BufReader;
 
 fn do_simple_query(test_name:&str,tls_config: Option<TestTlsConfig>) {
   let rt = Runtime::new().unwrap();
   let _= rt.block_on(async {
     const QUERY: &str ="SELECT name,birth_date from _test_user_ where name = ?";
-    let /*mut*/ tm = TestManager::new(test_name,3,tls_config);
+    let /*mut */tm = TestManager::new(test_name,3,tls_config);
+    //used to check manually the TestManager directory
     //tm.keep_temp_directories=true;
     tm.wait_for_cluster_established(1,60).await.unwrap();
     let client = tm.clients.get(&1).unwrap();
@@ -42,13 +49,37 @@ fn do_simple_query(test_name:&str,tls_config: Option<TestTlsConfig>) {
     
     tm.wait_for_last_applied_log(response.log_id,60).await.unwrap();
     
+    
+    
     //now check that query has been applied to each instance local sqlite database
+    //in tests , all instances share the same keys, so sqlite encryption key are 
+    //common to all instances.
+    
+    let key_param = if tm.tcm.tls_config.is_some() {
+        let private_key_bytes =
+        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tm.tcm.key_path).unwrap())).unwrap().remove(0)
+            ;
+            
+        let hashed_key = digest::digest(&digest::SHA256, &private_key_bytes);
+        
+        let hashed_key = URL_SAFE.encode(hashed_key.as_ref());
+        format!("?key=\"{}\"",hashed_key)
+    } else {
+      String::new()
+    };
     
     for (node_id,_client) in tm.clients.iter() {
       let instance = tm.tcm.instances.get(node_id).unwrap();
-      let sqlite_db_path = PathBuf::from(&instance.data_path).join("sqlite.db");
+      let sqlite_db_path = PathBuf::from(&instance.data_path).join(format!("sqlite.db{}",key_param));
+      
+      
+      //we need to determine the database encryption key used by the rxqlited instance 
+      //using the same algorithm that the one used in the instance
+    
+      
+      
       //println!("sqlite_db_path for node {}: {}",node_id,sqlite_db_path.display());
-      let pool = SqlitePool::connect(sqlite_db_path.to_str().unwrap()).await.unwrap();
+      let pool = Pool::<Sqlite>::connect(sqlite_db_path.to_str().unwrap()).await.unwrap();
       let rows=sqlx::query(QUERY)
         .bind("Ha")
         .fetch_all(&pool)

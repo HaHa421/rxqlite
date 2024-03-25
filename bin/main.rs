@@ -33,6 +33,9 @@ pub struct Opt {
     
     #[clap(long,action = clap::ArgAction::SetTrue)]
     accept_invalid_certificates: Option<bool>,
+    
+    #[clap(long,action = clap::ArgAction::SetTrue)]
+    no_database_encryption: Option<bool>,
 }
 
 #[tokio::main]
@@ -90,6 +93,7 @@ async fn main() -> anyhow::Result<()> {
         options.http_addr,
         options.rpc_addr,
         tls_config,
+        options.no_database_encryption.unwrap_or(false),
       )
       .await?;
       Ok(())
@@ -134,6 +138,7 @@ async fn main() -> anyhow::Result<()> {
         options.rpc_addr,
         members,
         tls_config,
+        options.no_database_encryption.unwrap_or(false),
       )
       .await
     }

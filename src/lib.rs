@@ -26,6 +26,12 @@ pub mod app;
 pub mod client;
 pub mod network;
 pub mod sqlite_store;
+
+
+pub mod cipher;
+use cipher::{EncryptData};
+pub use cipher::NoEncrypt;
+
 use sqlite_store as store;
 use warp::Filter;
 use std::net::SocketAddr;
@@ -41,6 +47,13 @@ use std::fs::File;
 use std::io::BufReader;
 //use std::io;
 use serde::{Serialize,Deserialize};
+
+#[cfg(feature = "sqlcipher")]
+use crate::cipher::ring::Aes256GcmEncryptor;
+#[cfg(feature = "sqlcipher")]
+use ring::digest;
+#[cfg(feature = "sqlcipher")]
+use base64::{engine::general_purpose::URL_SAFE, Engine as _};
 
 /*
 use std::future::Future;
@@ -154,6 +167,38 @@ async fn init_rxqlite<P>(
 where
     P: AsRef<Path>,
 {
+  let (_key,encrypt_data) : (Option<String>,Option<Arc<Box<dyn EncryptData>>>) =
+  {
+    #[cfg(feature = "sqlcipher")] 
+    {
+      
+      if let Some(tls_config) = instance_params.tls_config.as_ref() {
+        let private_key_bytes =
+        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tls_config.key_path)?))?.remove(0)
+            ;
+            
+        let hashed_key = digest::digest(&digest::SHA256, &private_key_bytes);
+        
+        let hashed_key = URL_SAFE.encode(hashed_key.as_ref());
+        
+        let private_key = rustls::pki_types::PrivatePkcs8KeyDer::from(private_key_bytes);
+        
+        let encrypt_data = Aes256GcmEncryptor::new(&private_key);
+        
+        
+        
+        
+        
+        (Some(hashed_key),Some(Arc::new(Box::new(encrypt_data))))
+      } else {
+        (None,None)
+      }
+    }
+    #[cfg(not(feature = "sqlcipher"))] 
+    {
+      (None,None)
+    }
+  };
   let rocksdb_dir = base_dir.as_ref().join("rocksdb");
   let sqlite_path = base_dir.as_ref().join("sqlite.db");
     
@@ -166,7 +211,12 @@ where
     
     let config = Arc::new(config.validate().unwrap());
     
-    let (log_store, state_machine_store) = new_storage(&rocksdb_dir,&sqlite_path).await?;
+    let (log_store, state_machine_store) = new_storage(&rocksdb_dir,
+      &sqlite_path,
+#[cfg(feature = "sqlcipher")] 
+      _key,
+      encrypt_data,
+      ).await?;
     
     let sqlite_and_path = state_machine_store.data.sqlite_and_path.clone();
     
@@ -310,7 +360,7 @@ pub async fn init_example_raft_node<P>(
     rpc_addr: Option<String>,
     members : Vec<(NodeId,String,String)>,
     tls_config: Option<RSQliteNodeTlsConfig>,
-    
+    _no_database_encryption: bool,
 ) -> anyhow::Result<()>
 where
     P: AsRef<Path>,
@@ -414,7 +464,7 @@ pub async fn start_example_raft_node<P>(
     _http_addr: Option<String>,
     _rpc_addr: Option<String>,
     _tls_config: Option<RSQliteNodeTlsConfig>,
-    
+    _no_database_encryption: bool,
 ) -> anyhow::Result<()>
 where
     P: AsRef<Path>,
