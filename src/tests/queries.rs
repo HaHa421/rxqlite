@@ -55,12 +55,12 @@ fn do_simple_query(test_name:&str,tls_config: Option<TestTlsConfig>) {
     //in tests , all instances share the same keys, so sqlite encryption key are 
     //common to all instances.
     
-    let key_param = if tm.tcm.tls_config.is_some() {
-        let private_key_bytes =
-        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tm.tcm.key_path).unwrap())).unwrap().remove(0)
-            ;
+    let key_param = if tm.tls_config.is_some() {
+        let private_key =
+        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tm.key_path).unwrap())).filter_map(|x|x.ok())
+        .next().unwrap();
             
-        let hashed_key = digest::digest(&digest::SHA256, &private_key_bytes);
+        let hashed_key = digest::digest(&digest::SHA256, private_key.secret_pkcs8_der());
         
         let hashed_key = URL_SAFE.encode(hashed_key.as_ref());
         format!("?key=\"{}\"",hashed_key)

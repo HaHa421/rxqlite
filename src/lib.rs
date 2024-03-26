@@ -173,15 +173,18 @@ where
     {
       
       if let Some(tls_config) = instance_params.tls_config.as_ref() {
-        let private_key_bytes =
-        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tls_config.key_path)?))?.remove(0)
-            ;
-            
-        let hashed_key = digest::digest(&digest::SHA256, &private_key_bytes);
+        let private_key =
+        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tls_config.key_path)?)).filter_map(|x|x.ok())
+        .next();
+        if private_key.is_none() {
+          return Err(anyhow::anyhow!("No valid certificate found in {}",tls_config.key_path));
+        }
+        let private_key = private_key.unwrap();
+        let hashed_key = digest::digest(&digest::SHA256, private_key.secret_pkcs8_der());
         
         let hashed_key = URL_SAFE.encode(hashed_key.as_ref());
         
-        let private_key = rustls::pki_types::PrivatePkcs8KeyDer::from(private_key_bytes);
+        let private_key = rustls::pki_types::PrivatePkcs8KeyDer::from(private_key.secret_pkcs8_der());
         
         let encrypt_data = Aes256GcmSivEncryptor::new(&private_key);
         
@@ -242,11 +245,14 @@ where
     
     let mut server_builder = toy_rpc_ha421::Server::builder();
     let handle = if let Some(tls_config) = instance_params.tls_config.as_ref() {
-      let certs = rustls_pemfile::certs(&mut BufReader::new(&mut File::open(&tls_config.cert_path)?))?
-        .into_iter().map(|x|rustls::pki_types::CertificateDer::from(x)).collect::<Vec<_>>();
-      let mut private_keys =
-        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tls_config.key_path)?))?
-            ;
+      let certs = rustls_pemfile::certs(&mut BufReader::new(&mut File::open(&tls_config.cert_path)?))
+        .into_iter().filter_map(|x|x.ok()).collect::<Vec<_>>();
+      let private_key =
+        rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(&tls_config.key_path)?)).filter_map(|x|x.ok())
+        .next();
+        if private_key.is_none() {
+          return Err(anyhow::anyhow!("No valid certificate found in {}",tls_config.key_path));
+        }
             /*
       let certs = load_certs(&tls_config.cert_path).unwrap();
       let mut keys = load_keys(&tls_config.key_path).unwrap();
@@ -256,7 +262,7 @@ where
         //.with_safe_defaults()
         .with_no_client_auth();
         
-      let config = config_builder.with_single_cert(certs, rustls::pki_types::PrivatePkcs8KeyDer::from(private_keys.remove(0)).into())?;
+      let config = config_builder.with_single_cert(certs, private_key.unwrap().into())?;
       /*
       if tls_config.accept_invalid_cert {
         config.dangerous().set_certificate_verifier(Arc::new(AllowAnyCertVerifier));
