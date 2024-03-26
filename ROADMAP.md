@@ -1,4 +1,6 @@
 # Roadmap
+## [0.1.8]
+Client authentication/autorization
 
 ## [0.1.6]
 BYC: Bring Your Cryptography, in order to encrypt/decrypt raft log,
