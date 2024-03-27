@@ -65,7 +65,7 @@ jobs:
 
     - name: Install Windows SDK(Windows)
       if: matrix.os == 'windows-latest'
-      run: choco install --force  windows-sdk-11-version-21h2-all -y
+      run: choco install windows-sdk-10.0 -y
       
     
     - name: Install Clang(Windows)
