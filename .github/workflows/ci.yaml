@@ -67,7 +67,10 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: choco install windows-sdk-10.1 -y
       
-    
+    - name: Set INCLUDE environment variable(Windows)
+      if: matrix.os == 'windows-latest'
+      run: echo "INCLUDE=C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt;$INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+  
     - name: Install Clang(Windows)
       if: matrix.os == 'windows-latest'
       run: choco install llvm
