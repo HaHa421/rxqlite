@@ -101,16 +101,16 @@ generate_self_signed_certificate
 
 echo "Start 3 uninitialized rxqlited servers..."
 
-RUST_LOG=debug ${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 --member "2;127.0.0.1:21002;127.0.0.1:22002" --member "3;127.0.0.1:21003;127.0.0.1:22003" --leader  --cert-path certs-test/rxqlited.pem --key-path  certs-test/rxqlited.key  --accept-invalid-certificates  2>&1 > n1.log &
+RUST_LOG=debug ${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 --notifications-addr 127.0.0.1:23001 --member "2;127.0.0.1:21002;127.0.0.1:22002" --member "3;127.0.0.1:21003;127.0.0.1:22003" --leader  --cert-path certs-test/rxqlited.pem --key-path  certs-test/rxqlited.key  --accept-invalid-certificates  2>&1 > n1.log &
 PID1=$!
 sleep 1
 echo "Server 1 started as leader"
 #exit 0
-RUST_LOG=debug ${bin} --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002 --cert-path certs-test/rxqlited.pem --key-path  certs-test/rxqlited.key  --accept-invalid-certificates > n2.log &
+RUST_LOG=debug ${bin} --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002 --notifications-addr 127.0.0.1:23002 --cert-path certs-test/rxqlited.pem --key-path  certs-test/rxqlited.key  --accept-invalid-certificates > n2.log &
 sleep 1
 echo "Server 2 started as learner"
 
-RUST_LOG=debug ${bin} --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003 --cert-path certs-test/rxqlited.pem --key-path  certs-test/rxqlited.key  --accept-invalid-certificates > n3.log &
+RUST_LOG=debug ${bin} --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003 --notifications-addr 127.0.0.1:23003 --cert-path certs-test/rxqlited.pem --key-path  certs-test/rxqlited.key  --accept-invalid-certificates > n3.log &
 sleep 1
 echo "Server 3 started as learner"
 sleep 1
