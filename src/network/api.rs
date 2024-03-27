@@ -7,7 +7,7 @@ use crate::Node;
 use crate::TypeConfig;
 use openraft::LeaderId;
 use openraft::LogId;
-use rxqlite_common::Message;
+use rxqlite_common::{Message,MessageResponse};
 
 pub async fn sql_consistent_or_fast(
     message: Message,
@@ -17,7 +17,26 @@ pub async fn sql_consistent_or_fast(
     let sql = message.sql();
 
     let is_write = rxqlite_sqlx_common::is_query_write(sql);
-
+    if let Err(err) = &is_write {
+      let response_message = MessageResponse::Error(format!("{}",err));
+      let client_write_response = openraft::raft::ClientWriteResponse::<TypeConfig> {
+            log_id: LogId {
+                leader_id: LeaderId {
+                    term: u64::MAX,
+                    node_id: u64::MAX,
+                },
+                index: u64::MAX,
+            },
+            data: Some(response_message),
+            membership: None,
+        };
+        let res = Result::<
+            openraft::raft::ClientWriteResponse<TypeConfig>,
+            openraft::error::RaftError<u64, openraft::error::ClientWriteError<u64, Node>>,
+        >::Ok(client_write_response);
+        return Ok(reply::json(&res));
+    }
+    let is_write=is_write.unwrap();
     if is_write {
         let res: Result<openraft::raft::ClientWriteResponse<TypeConfig>, _> =
             app.raft.client_write(message).await;

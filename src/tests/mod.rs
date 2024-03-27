@@ -117,10 +117,12 @@ impl TestManager {
 
         loop {
             if let Ok(metrics) = self.get_metrics(node_id).await {
+              if metrics.current_leader.is_some() {
                 let voter_ids = metrics.membership_config.voter_ids();
                 if voter_ids.count() == self.node_count() {
-                    return Ok(());
+                  return Ok(());
                 }
+              }
             }
             reattempts -= 1;
             if reattempts == 0 {
