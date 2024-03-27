@@ -24,7 +24,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-tags: true
-    - uses: ilammy/msvc-dev-cmd@v1
     
     - name: Define Binary Name(Windows)
       if: matrix.os == 'windows-latest'
@@ -60,6 +59,18 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get update && sudo apt-get install -y build-essential
     
+    - name: Install MSVC(Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install visualstudio2022buildtools
+
+    - name: Install Windows SDK(Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install windows-sdk-10.1 -y
+      
+    - name: Set INCLUDE environment variable(Windows)
+      if: matrix.os == 'windows-latest'
+      run: echo "INCLUDE=C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt;$INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+  
     - name: Install Clang(Windows)
       if: matrix.os == 'windows-latest'
       run: choco install llvm
