@@ -1,6 +1,6 @@
 [package]
 name = "rxqlite-sqlx-common"
-version = "0.1.2"
+version = "0.1.3"
 
 edition = "2021"
 authors = [
@@ -17,6 +17,7 @@ repository = "https://github.com/HaHa421/rxqlite"
 [dependencies]
 rxqlite-common = { version = "0.1" , path = "../rxqlite-common" }
 sqlparser=  "0.44"
+anyhow = "1"
 
 [dependencies.sqlx]
 version = "0.7"

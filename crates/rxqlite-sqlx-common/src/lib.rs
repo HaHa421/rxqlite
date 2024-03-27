@@ -281,23 +281,23 @@ fn is_for_update_or_share(query: &Box<Query>) -> bool {
     !query.locks.is_empty()
 }
 
-pub fn is_query_write(sql: &str) -> bool {
-    let ast = Parser::parse_sql(&GenericDialect, sql).unwrap();
+pub fn is_query_write(sql: &str) -> anyhow::Result<bool> {
+    let ast = Parser::parse_sql(&GenericDialect, sql)?;
     for stmt in ast {
         match stmt {
             Statement::Query(query) => {
                 if is_for_update_or_share(&query) {
-                    return true;
+                    return Ok(true);
                 } else {
                 }
             }
             Statement::Insert { .. } | Statement::Update { .. } | Statement::Delete { .. } => {
-                return true
+                return Ok(true);
             }
             _ => {
-                return true;
+                return Ok(true);
             }
         }
     }
-    false
+    Ok(false)
 }
