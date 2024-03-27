@@ -61,7 +61,7 @@ jobs:
     
     - name: Install MSVC
       if: matrix.os == 'windows-latest'
-      run: choco install visualstudio2022buildtools --package-parameters "--includeRecommended --passive --locale en-US"
+      run: winget install Microsoft.VisualStudio.2022.BuildTools --force --override "--wait --passive --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621"
     
     - name: Install Clang(Windows)
       if: matrix.os == 'windows-latest'
