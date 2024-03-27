@@ -61,7 +61,7 @@ jobs:
     
     - name: Install MSVC
       if: matrix.os == 'windows-latest'
-      run: choco install visualstudio2022buildtools --package-parameters "--allWorkloads --includeRecommended --includeOptional --passive --locale en-US"
+      run: choco install visualstudio2022buildtools --package-parameters "--includeRecommended --passive --locale en-US"
     
     - name: Install Clang(Windows)
       if: matrix.os == 'windows-latest'
