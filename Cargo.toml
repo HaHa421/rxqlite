@@ -100,7 +100,7 @@ optional = true
 
 [dev-dependencies]
 futures = { version = "0.3.30" }
-rxqlite-tests-common = { version = "0.1" , path = "crates/rxqlite-tests-common" }
+rxqlite-tests-common = { version = "0.1.4" , path = "crates/rxqlite-tests-common" }
 
 [features]
 default = [ "bundled-sqlcipher-vendored-openssl"  ]
