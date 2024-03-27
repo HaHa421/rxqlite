@@ -78,17 +78,17 @@ echo "Start 3 uninitialized rxqlited servers..."
 #exit 0
 
 #exit 0
-RUST_LOG=trace ${bin} --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002 > n2.log &
+RUST_LOG=trace ${bin} --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002 --notifications-addr 127.0.0.1:23002 > n2.log &
 sleep 1
 echo "Server 2 started as learner"
 
-RUST_LOG=trace ${bin} --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003 > n3.log &
+RUST_LOG=trace ${bin} --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003 --notifications-addr 127.0.0.1:23003 > n3.log &
 sleep 1
 echo "Server 3 started as learner"
 sleep 1
 
 
-RUST_LOG=info ${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 --leader --member "2;127.0.0.1:21002;127.0.0.1:22002" --member "3;127.0.0.1:21003;127.0.0.1:22003" & 2>&1 > n1.log &
+RUST_LOG=info ${bin} --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 --notifications-addr 127.0.0.1:23001 --leader --member "2;127.0.0.1:21002;127.0.0.1:22002" --member "3;127.0.0.1:21003;127.0.0.1:22003" & 2>&1 > n1.log &
 PID1=$!
 sleep 1
 echo "Server 1 started as leader"

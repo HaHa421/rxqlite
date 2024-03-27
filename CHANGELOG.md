@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.8] - 2024-03-27
+Introduced the notifcation system
+rxqlited now listens on three ports:
+host-addr is the address the node listens to api calls
+rpc-addr is the address the node listens to raft(internal) calls
+notifications-addr is the address the node listens to notifications messages
+
+Notifications are a subset of sqlite hooks and lets the client get notfied on database modifications.
+
 ## [0.1.7] - 2024-03-25
 optimized and upgraded rocksdb value encryption to AES-GCM-SIV
 

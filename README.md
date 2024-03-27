@@ -62,7 +62,7 @@ clusters must contain an odd number of nodes (rxqlited as a single node forms a 
 Starting a single node cluster on a local machine:
 using
 ```bash
-rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001
+rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 --notifications-addr 127.0.0.1:23001
 ```
 
 rxqlited will listen on localhost:22001 for api and cluster management requests.
@@ -79,11 +79,11 @@ which is expected in a single node cluster.
 Starting a 3 node cluster on a local machine:
 
 ```bash
-rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 --member "2;127.0.0.1:21002;127.0.0.1:22002" --member "3;127.0.0.1:21003;127.0.0.1:22003" --leader true
+rxqlited --id 1 --http-addr 127.0.0.1:21001 --rpc-addr 127.0.0.1:22001 --notifications-addr 127.0.0.1:23001 --member "2;127.0.0.1:21002;127.0.0.1:22002" --member "3;127.0.0.1:21003;127.0.0.1:22003" --leader true
 
-rxqlited --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002
+rxqlited --id 2 --http-addr 127.0.0.1:21002 --rpc-addr 127.0.0.1:22002 --notifications-addr 127.0.0.1:23002
 
-rxqlited --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003
+rxqlited --id 3 --http-addr 127.0.0.1:21003 --rpc-addr 127.0.0.1:22003 --notifications-addr 127.0.0.1:23003
 
 ```
 
