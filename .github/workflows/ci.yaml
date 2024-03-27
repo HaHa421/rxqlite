@@ -68,6 +68,11 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: echo "C:/Program Files/LLVM/bin" >> $GITHUB_PATH
     
+    - name: Install NASM(Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install nasm -y
+
+
     - name: Install Clang(Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y clang
