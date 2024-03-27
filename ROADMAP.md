@@ -1,7 +1,10 @@
 # Roadmap
 
-## [0.1.9]
+## [0.1.10]
 Client authorization
+
+## [0.1.9]
+Bug fixes
 
 ## [0.1.8]
 Notification system
