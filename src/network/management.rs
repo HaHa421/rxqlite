@@ -5,10 +5,10 @@ use std::sync::Arc;
 use openraft::error::Infallible;
 use openraft::RaftMetrics;
 
-use warp::reply;
 use crate::app::App;
 use crate::Node;
 use crate::NodeId;
+use warp::reply;
 //use rxqlite_common::{RSQliteNodeConfig};
 
 //use crate::TypeConfig;
@@ -25,11 +25,12 @@ pub struct Empty {}
 /// (by calling `change-membership`)
 pub async fn add_learner(
     (node_id, api_addr, rpc_addr): (NodeId, String, String),
-    app: Arc<App>) -> Result<impl warp::Reply, std::convert::Infallible> {
-    let node = Node { 
-      rpc_addr, 
-      api_addr,
-      //tls_config: None,
+    app: Arc<App>,
+) -> Result<impl warp::Reply, std::convert::Infallible> {
+    let node = Node {
+        rpc_addr,
+        api_addr,
+        //tls_config: None,
     };
     let res = app.raft.add_learner(node_id, node, true).await;
     Ok(reply::json(&res))
@@ -38,7 +39,8 @@ pub async fn add_learner(
 /// Changes specified learners to members, or remove members.
 pub async fn change_membership(
     body: BTreeSet<NodeId>,
-    app: Arc<App>) -> Result<impl warp::Reply, std::convert::Infallible> {
+    app: Arc<App>,
+) -> Result<impl warp::Reply, std::convert::Infallible> {
     let res = app.raft.change_membership(body, false).await;
     Ok(reply::json(&res))
 }
@@ -47,8 +49,8 @@ pub async fn change_membership(
 /// Initialize a single-node cluster.
 pub async fn init(_opts: RSQliteNodeConfig, app: Arc<App>) -> Result<impl warp::Reply, std::convert::Infallible> {
     let mut nodes = BTreeMap::new();
-    let node = Node { 
-      rpc_addr: app.rpc_addr.clone(), 
+    let node = Node {
+      rpc_addr: app.rpc_addr.clone(),
       api_addr: app.api_addr.clone(),
       //tls_config: None,
     };
@@ -65,7 +67,10 @@ pub async fn metrics(app: Arc<App>) -> Result<impl warp::Reply, std::convert::In
     Ok(reply::json(&res))
 }
 
-pub async fn snapshot(_: Empty, app: Arc<App>) -> Result<impl warp::Reply, std::convert::Infallible> {
+pub async fn snapshot(
+    _: Empty,
+    app: Arc<App>,
+) -> Result<impl warp::Reply, std::convert::Infallible> {
     let res = app.raft.trigger().snapshot().await;
     Ok(reply::json(&res))
 }

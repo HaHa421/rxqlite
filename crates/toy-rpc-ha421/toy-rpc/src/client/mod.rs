@@ -136,10 +136,10 @@ cfg_if! {
             /// Connects to an HTTP RPC server at the specified network address using WebSocket and the defatul codec.
             ///
             /// It is recommended to use "ws://" as the url scheme as opposed to "http://"; however, internally the url scheme
-            /// is changed to "ws://". For example, a valid path could be "ws://127.0.0.1/rpc/". Since deprecation of 
+            /// is changed to "ws://". For example, a valid path could be "ws://127.0.0.1/rpc/". Since deprecation of
             /// [`crate::DEFAULT_RPC_PATH`] starting from version 0.9.0-beta.1, this no longer appends `DEFAULT_RPC_PATH`
             /// to the end of the specified `addr`, making it essentially identical to [`dial_websocket`](./#method.dial_websocket).
-            /// 
+            ///
             /// For compatibility with HTTP integrated RPC server prior to version 0.9.0-beta.1,
             /// the user should manually append [`DEFAULT_RPC_PATH`] to the end of the path passed
             /// to `Client::dial_http` or `Client::dial_websocket`

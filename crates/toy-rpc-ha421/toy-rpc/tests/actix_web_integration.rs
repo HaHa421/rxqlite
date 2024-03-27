@@ -43,7 +43,7 @@ async fn start_server(base: &'static str) -> Result<()> {
         App::new().service(
             web::resource("/rpc/")
                 .app_data(app_data.clone())
-                .route(web::get().to(Server::index))
+                .route(web::get().to(Server::index)),
         )
     })
     .bind(&base)?
@@ -53,7 +53,11 @@ async fn start_server(base: &'static str) -> Result<()> {
     Ok(())
 }
 
-async fn run(base: &'static str, server_is_ready: Sender<()>, rx: Receiver<()>) -> Result<JoinHandle<()>> {
+async fn run(
+    base: &'static str,
+    server_is_ready: Sender<()>,
+    rx: Receiver<()>,
+) -> Result<JoinHandle<()>> {
     let handle = actix_rt::spawn(async move {
         start_server(base)
             .await

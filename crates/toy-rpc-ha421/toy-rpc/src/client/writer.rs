@@ -52,11 +52,8 @@ impl<W: CodecWrite> ClientWriter<W> {
 #[async_trait]
 impl<W: CodecWrite + GracefulShutdown> Writer for ClientWriter<W> {
     type Item = ClientWriterItem;
-    
-    async fn op(
-        &mut self,
-        item: ClientWriterItem,
-    ) -> Result<Running, Error> {
+
+    async fn op(&mut self, item: ClientWriterItem) -> Result<Running, Error> {
         match item {
             ClientWriterItem::Request(id, service_method, duration, body) => {
                 let header = Header::Request {
@@ -65,7 +62,8 @@ impl<W: CodecWrite + GracefulShutdown> Writer for ClientWriter<W> {
                     timeout: duration,
                 };
                 log::debug!("{:?}", &header);
-                self.write_request(header, &body).await
+                self.write_request(header, &body)
+                    .await
                     .map(|_| Running::Continue)
             }
             ClientWriterItem::Cancel(id) => {
@@ -74,31 +72,35 @@ impl<W: CodecWrite + GracefulShutdown> Writer for ClientWriter<W> {
                 let body: String =
                     format!("{}{}{}", CANCELLATION_TOKEN, CANCELLATION_TOKEN_DELIM, id);
                 let body = Box::new(body) as Box<OutboundBody>;
-                self.write_request(header, &body).await
+                self.write_request(header, &body)
+                    .await
                     .map(|_| Running::Continue)
             }
             ClientWriterItem::Publish(id, topic, body) => {
                 let header = Header::Publish { id, topic };
                 log::debug!("{:?}", &header);
-                self.write_publish_item(header, &body).await
+                self.write_publish_item(header, &body)
+                    .await
                     .map(|_| Running::Continue)
             }
             ClientWriterItem::Subscribe(id, topic) => {
                 let header = Header::Subscribe { id, topic };
                 log::debug!("{:?}", &header);
-                self.write_request(header, &()).await
+                self.write_request(header, &())
+                    .await
                     .map(|_| Running::Continue)
             }
             ClientWriterItem::Unsubscribe(id, topic) => {
                 let header = Header::Unsubscribe { id, topic };
                 log::debug!("{:?}", &header);
-                self.write_request(header, &()).await
+                self.write_request(header, &())
+                    .await
                     .map(|_| Running::Continue)
             }
             ClientWriterItem::Stopping => {
                 self.writer.close().await;
                 Ok(Running::Continue)
-            },
+            }
             ClientWriterItem::Stop => Ok(Running::Stop),
         }
     }

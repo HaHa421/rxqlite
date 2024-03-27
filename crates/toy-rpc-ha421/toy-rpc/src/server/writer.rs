@@ -81,11 +81,10 @@ impl<W: CodecWrite + GracefulShutdown> ServerWriter<W> {
         self.writer.write_body_bytes(id, &content).await?;
         Ok(())
     }
-
 }
 
 #[async_trait]
-impl<W> Writer for ServerWriter<W> 
+impl<W> Writer for ServerWriter<W>
 where
     W: CodecWrite + GracefulShutdown,
 {
@@ -103,12 +102,14 @@ where
                 content,
             } => {
                 let id = seq_id.0;
-                self.write_publication(id, topic, &content).await.map(|_| Running::Continue)
+                self.write_publication(id, topic, &content)
+                    .await
+                    .map(|_| Running::Continue)
             }
             ServerWriterItem::Stopping => {
                 self.writer.close().await;
                 Ok(Running::Continue)
-            },
+            }
             ServerWriterItem::Stop => Ok(Running::Stop),
         }
     }

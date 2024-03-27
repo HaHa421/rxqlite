@@ -1,14 +1,13 @@
 use super::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 //use crate::sqlite_store::{SqliteAndPath,init_sqlite_connection};
 
 use tokio::fs::File;
-use tokio::io::{AsyncReadExt,AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-
-#[derive(Serialize, Deserialize,Default)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct SqliteSnaphot {
-  db: Vec<u8>,
+    db: Vec<u8>,
 }
 /*
 PRAGMA schema.wal_checkpoint;
@@ -40,46 +39,46 @@ async fn flush_wal(pool: &SqlitePool) -> Result<(i64, i64, i64), sqlx::Error> {
     Ok(row)
 }
 
-pub async fn make_snapshot(sqlite_and_path: &mut SqliteAndPath) -> Result<SqliteSnaphot,Box<dyn std::error::Error + Send + Sync + 'static>> {
-  
-  
-  loop {
-    let status = flush_wal(&sqlite_and_path.pool).await?;
-    if status.0 == 0 {
-      break;
+pub async fn make_snapshot(
+    sqlite_and_path: &mut SqliteAndPath,
+) -> Result<SqliteSnaphot, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    loop {
+        let status = flush_wal(&sqlite_and_path.pool).await?;
+        if status.0 == 0 {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
     }
-    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
-  }
-  
-  sqlite_and_path.pool.close().await;
-  let mut sqlite_snapshot = SqliteSnaphot::default();
-  {
-    let mut file = File::open(&sqlite_and_path.path).await?;
-    file.read_to_end(&mut sqlite_snapshot.db).await?;
-    file.flush().await?;
-  }
-  sqlite_and_path.pool = 
-    init_sqlite_connection(sqlite_and_path.path.to_str().unwrap()).await?;
-  Ok(sqlite_snapshot)
+
+    sqlite_and_path.pool.close().await;
+    let mut sqlite_snapshot = SqliteSnaphot::default();
+    {
+        let mut file = File::open(&sqlite_and_path.path).await?;
+        file.read_to_end(&mut sqlite_snapshot.db).await?;
+        file.flush().await?;
+    }
+    sqlite_and_path.pool = init_sqlite_connection(sqlite_and_path.path.to_str().unwrap()).await?;
+    Ok(sqlite_snapshot)
 }
 
-pub async fn update_database_from_snapshot(sqlite_and_path: &mut SqliteAndPath,sqlite_snapshot: &SqliteSnaphot)->Result<(),Box<dyn std::error::Error + Send + Sync + 'static>> {
-  loop {
-    let status = flush_wal(&sqlite_and_path.pool).await?;
-    if status.0 == 0 {
-      break;
+pub async fn update_database_from_snapshot(
+    sqlite_and_path: &mut SqliteAndPath,
+    sqlite_snapshot: &SqliteSnaphot,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    loop {
+        let status = flush_wal(&sqlite_and_path.pool).await?;
+        if status.0 == 0 {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
     }
-    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
-  }
-  sqlite_and_path.pool.close().await;
-  tokio::fs::remove_file(&sqlite_and_path.path).await?;
-  {
-    let mut file = File::create(&sqlite_and_path.path).await?;
-    file.write_all(&sqlite_snapshot.db).await?;
-    file.flush().await?;
-  }
-  sqlite_and_path.pool = 
-    init_sqlite_connection(sqlite_and_path.path.to_str().unwrap()).await?;
-  Ok(())
+    sqlite_and_path.pool.close().await;
+    tokio::fs::remove_file(&sqlite_and_path.path).await?;
+    {
+        let mut file = File::create(&sqlite_and_path.path).await?;
+        file.write_all(&sqlite_snapshot.db).await?;
+        file.flush().await?;
+    }
+    sqlite_and_path.pool = init_sqlite_connection(sqlite_and_path.path.to_str().unwrap()).await?;
+    Ok(())
 }
-

@@ -8,7 +8,7 @@ use axum::{
         Extension,
     },
     response::IntoResponse,
-    routing::{Router, get},
+    routing::{get, Router},
 };
 use bytes::Bytes;
 use http_body::Body;
@@ -45,10 +45,7 @@ impl Server {
         B::Error: std::error::Error + Send + Sync,
     {
         Router::new()
-            .route(
-                "/",
-                get(Self::on_websocket_upgrade),
-            )
+            .route("/", get(Self::on_websocket_upgrade))
             .layer(Extension(self))
     }
 

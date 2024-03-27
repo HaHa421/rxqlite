@@ -1,10 +1,9 @@
-use flume::{Sender, Receiver};
+use flume::{Receiver, Sender};
 use futures::FutureExt;
 
 use crate::Error;
 
-use super::{Broker, Reader, Writer, Running};
-
+use super::{Broker, Reader, Running, Writer};
 
 pub(crate) struct Engine<B, R, W, BI> {
     broker: B,

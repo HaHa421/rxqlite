@@ -117,7 +117,7 @@ impl Client {
     /// Creates a new publisher on a topic.
     ///
     /// Multiple local publishers on the same topic are allowed.
-    /// 
+    ///
     /// An unbounded channel will be created if `cap` is `0`, and a bounded channel with capacity
     /// equal to `cap` will be created if a non-zero value is provided
     pub fn publisher<T: Topic>(&self) -> Publisher<T> {
@@ -205,10 +205,7 @@ impl Client {
     ///
     /// An unbounded channel will be created if `cap` is `0`, and a bounded channel with capacity
     /// equal to `cap` will be created if a non-zero value is provided
-    pub fn subscriber<T: Topic + 'static>(
-        &mut self,
-        cap: usize,
-    ) -> Result<Subscriber<T>, Error> {
+    pub fn subscriber<T: Topic + 'static>(&mut self, cap: usize) -> Result<Subscriber<T>, Error> {
         self.create_subscriber_rx::<T>(cap)
             .map(|rx| Subscriber::<T>::new(self.broker.clone(), rx))
     }

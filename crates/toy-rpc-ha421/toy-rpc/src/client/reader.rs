@@ -14,13 +14,11 @@ pub(crate) struct ClientReader<R> {
 impl<R: CodecRead> Reader for ClientReader<R> {
     type BrokerItem = ClientBrokerItem;
 
-    async fn op(
-        &mut self,
-    ) -> Option<Result<ClientBrokerItem, Error>> {
+    async fn op(&mut self) -> Option<Result<ClientBrokerItem, Error>> {
         let header = self.reader.read_header().await?;
         let header: Header = match header {
             Ok(header) => header,
-            Err(err) => return Some(Err(err.into()))
+            Err(err) => return Some(Err(err.into())),
         };
 
         match header {
@@ -31,7 +29,7 @@ impl<R: CodecRead> Reader for ClientReader<R> {
                         Ok(de) => de,
                         Err(err) => return Some(Err(err.into())),
                     },
-                    None => return None
+                    None => return None,
                 };
                 let result = match is_ok {
                     true => Ok(deserializer),

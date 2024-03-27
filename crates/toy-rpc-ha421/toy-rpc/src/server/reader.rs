@@ -8,7 +8,7 @@ use crate::{
     message::{MessageId, CANCELLATION_TOKEN, CANCELLATION_TOKEN_DELIM},
     pubsub::SeqId,
     service::{ArcAsyncServiceCall, AsyncServiceMap},
-    util::{Running, Reader},
+    util::{Reader, Running},
 };
 
 use super::broker::ServerBrokerItem;

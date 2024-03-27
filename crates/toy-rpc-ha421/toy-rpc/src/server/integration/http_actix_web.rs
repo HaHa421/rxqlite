@@ -501,7 +501,7 @@ cfg_if! {
     ))] {
         impl Server {
             /// Entry for integration with `actix-web`
-            /// 
+            ///
             /// # Example
             ///
             /// ```
@@ -516,7 +516,7 @@ cfg_if! {
             ///         App::new()
             ///             .service(
             ///                 web::resource("/")
-            ///                 .app_data(app_data.clone())   
+            ///                 .app_data(app_data.clone())
             ///                 .route(web::get().to(Server::index))
             ///             )
             ///     }

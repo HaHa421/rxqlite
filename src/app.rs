@@ -3,9 +3,9 @@ use std::sync::Arc;
 use openraft::Config;
 use tokio::sync::RwLock;
 
+use crate::sqlite_store::*;
 use crate::ExampleRaft;
 use crate::NodeId;
-use crate::sqlite_store::*;
 // Representation of an application state. This struct can be shared around to share
 // instances of raft, store and more.
 pub struct App {

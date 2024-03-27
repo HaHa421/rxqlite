@@ -133,19 +133,19 @@ pub mod transport;
 pub mod util;
 
 /// The default path added to the HTTP url
-/// 
-/// This is deprecated starting from version 0.9.0-beta.1. 
+///
+/// This is deprecated starting from version 0.9.0-beta.1.
 /// This has no effect if you do not use integration with any HTTP
-/// frameworks. 
-/// 
+/// frameworks.
+///
 /// However, for the HTTP integration on the server side, the deprecation means
 /// that the [`DEFAULT_RPC_PATH`] is ***NO LONGER*** appended to the endpoint
-/// path specified to the framework. 
-/// 
+/// path specified to the framework.
+///
 /// For client side, the deprecation means that [`DEFAULT_RPC_PATH`] is no longer appended
 /// to the end of the path specified to `Client::dial_http` (ie. `Client::dial_http` becomes
 /// equivalent to `Client::dial_websocket`).
-/// 
+///
 /// For compatibility with HTTP integrated RPC server prior to version 0.9.0-beta.1,
 /// the user should manually append [`DEFAULT_RPC_PATH`] to the end of the path passed
 /// to `Client::dial_http` or `Client::dial_websocket`

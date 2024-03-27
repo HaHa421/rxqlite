@@ -2,7 +2,10 @@
 
 use cfg_if::cfg_if;
 
-use crate::{pubsub::{DEFAULT_PUB_RETRIES, DEFAULT_PUB_RETRY_TIMEOUT}, util::engine::Engine};
+use crate::{
+    pubsub::{DEFAULT_PUB_RETRIES, DEFAULT_PUB_RETRY_TIMEOUT},
+    util::engine::Engine,
+};
 
 #[cfg(any(feature = "ws_tokio", feature = "ws_async_std"))]
 use crate::transport::ws::WebSocketConn;
@@ -210,7 +213,7 @@ cfg_if! {
             }
 
             /// Connects to an HTTP RPC server at the specified network address using WebSocket and the defatul codec.
-            /// 
+            ///
             /// This functions the same as `dial_websocket`
             #[cfg(any(feature = "ws_tokio", feature = "ws_async_std"))]
             #[cfg_attr(feature = "docs", doc(cfg(any(feature = "ws_tokio", feature = "ws_async_std"))))]

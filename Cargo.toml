@@ -60,9 +60,12 @@ toy-rpc-ha421 = { version = "0.9.0-beta.1", features = [
 ] , path = "crates/toy-rpc-ha421/toy-rpc"}
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.0", features = ["env-filter"] }
-
+tokio-rustls = "0.26"
+tokio-util = { version = "0.7" , features = [ "codec" ] }
+futures-util= "0.3"
 futures = { version = "0.3.30" , optional = true }
 rxqlite-tests-common = { version = "0.1" , path = "crates/rxqlite-tests-common" , optional = true }
+
 
 [dependencies.sqlx]
 version = "0.7"
@@ -70,7 +73,7 @@ features = ["runtime-tokio-rustls" , "chrono" ]
 
 [dependencies.sqlx-sqlite-cipher]
 #path = "../sqlx-sqlite-cipher"
-version = "0.7"
+version = "0.7.5"
 
 
 [dependencies.sqlx-core]

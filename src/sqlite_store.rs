@@ -31,17 +31,17 @@ use rocksdb::ColumnFamilyDescriptor;
 use rocksdb::Direction;
 use rocksdb::Options;
 use rocksdb::DB;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use tokio::sync::RwLock;
 
-pub use sqlx::{Pool, migrate::MigrateDatabase};
+pub use sqlx::{migrate::MigrateDatabase, Pool};
 pub use sqlx_sqlite_cipher::Sqlite;
 
 pub type SqlitePool = Pool<Sqlite>;
 
-use std::path::PathBuf;
 use crate::cipher::EncryptData;
+use std::path::PathBuf;
 
 use crate::typ;
 use crate::Node;
@@ -53,22 +53,19 @@ use rxqlite_sqlx_common::do_sql;
 pub use rxqlite_sqlx_common::SqlxDb;
 use sqlite_snapshot::SqliteSnaphot;
 
-
 #[derive(Debug, Clone)]
 pub struct SqliteAndPath {
-  pool : SqlitePool,
-  path : PathBuf,
+    pool: SqlitePool,
+    path: PathBuf,
 }
 
 impl std::ops::Deref for SqliteAndPath {
-  type Target = SqlitePool;
-  fn deref(&self)->&Self::Target {
-    &self.pool
-  }
+    type Target = SqlitePool;
+    fn deref(&self) -> &Self::Target {
+        &self.pool
+    }
 }
 mod sqlite_snapshot;
-
-
 
 pub type Request = rxqlite_common::Message;
 pub type Response = Option<rxqlite_common::MessageResponse>;
@@ -80,8 +77,6 @@ pub struct StoredSnapshot {
     /// The data of the state machine at the time of this snapshot.
     pub data: Vec<u8>,
 }
-
-
 
 #[derive(/*Debug,*/ Clone)]
 pub struct StateMachineStore {
@@ -95,7 +90,7 @@ pub struct StateMachineStore {
 
     /// State machine stores snapshot in db.
     db: Arc<DB>,
-    
+
     encrypt_data: Option<Arc<Box<dyn EncryptData>>>,
 }
 
@@ -105,7 +100,6 @@ pub struct StateMachineData {
 
     pub last_membership: StoredMembership<NodeId, Node>,
 
-    
     pub sqlite_and_path: Arc<RwLock<SqliteAndPath>>,
 }
 
@@ -116,10 +110,11 @@ impl RaftSnapshotBuilder<TypeConfig> for StateMachineStore {
 
         let sqlite_json = {
             let mut sqlite_and_path = self.data.sqlite_and_path.write().await;
-            let snapshot = sqlite_snapshot::make_snapshot(&mut sqlite_and_path).await
-              .map_err(|e| StorageError::IO {
-                source: StorageIOError::read(AnyError::error(&format!("{}",e))),
-              })?;
+            let snapshot = sqlite_snapshot::make_snapshot(&mut sqlite_and_path)
+                .await
+                .map_err(|e| StorageError::IO {
+                    source: StorageIOError::read(AnyError::error(&format!("{}", e))),
+                })?;
             serde_json::to_vec(&snapshot).map_err(|e| StorageIOError::read_state_machine(&e))?
         };
 
@@ -150,10 +145,11 @@ impl RaftSnapshotBuilder<TypeConfig> for StateMachineStore {
 }
 
 impl StateMachineStore {
-    async fn new(db: Arc<DB>,
-      sqlite_and_path: Arc<RwLock<SqliteAndPath>>,
-      encrypt_data: Option<Arc<Box<dyn EncryptData>>>,
-      ) -> Result<StateMachineStore, StorageError<NodeId>> {
+    async fn new(
+        db: Arc<DB>,
+        sqlite_and_path: Arc<RwLock<SqliteAndPath>>,
+        encrypt_data: Option<Arc<Box<dyn EncryptData>>>,
+    ) -> Result<StateMachineStore, StorageError<NodeId>> {
         let mut sm = Self {
             data: StateMachineData {
                 last_applied_log_id: None,
@@ -173,54 +169,67 @@ impl StateMachineStore {
         Ok(sm)
     }
 
-    async fn update_state_machine_(&mut self, snapshot: StoredSnapshot) -> Result<(), StorageError<NodeId>> {
+    async fn update_state_machine_(
+        &mut self,
+        snapshot: StoredSnapshot,
+    ) -> Result<(), StorageError<NodeId>> {
         let sqlite_snapshot: SqliteSnaphot = serde_json::from_slice(&snapshot.data)
             .map_err(|e| StorageIOError::read_snapshot(Some(snapshot.meta.signature()), &e))?;
         self.data.last_applied_log_id = snapshot.meta.last_log_id;
         self.data.last_membership = snapshot.meta.last_membership.clone();
-        
-        
+
         let mut sqlite_and_path = self.data.sqlite_and_path.write().await;
-        sqlite_snapshot::update_database_from_snapshot(&mut sqlite_and_path,&sqlite_snapshot).await
-          .map_err(|e| StorageError::IO {
-            source: StorageIOError::write(AnyError::error(&format!("{}",e))),
-          })?;
+        sqlite_snapshot::update_database_from_snapshot(&mut sqlite_and_path, &sqlite_snapshot)
+            .await
+            .map_err(|e| StorageError::IO {
+                source: StorageIOError::write(AnyError::error(&format!("{}", e))),
+            })?;
         Ok(())
     }
 
     fn get_current_snapshot_(&self) -> StorageResult<Option<StoredSnapshot>> {
-        let encrypted_data=self
-            .db
-            .get_cf(self.store(), b"snapshot")
-            .map_err(|e| StorageError::IO {
-                source: StorageIOError::read(&e),
-            })?;
+        let encrypted_data =
+            self.db
+                .get_cf(self.store(), b"snapshot")
+                .map_err(|e| StorageError::IO {
+                    source: StorageIOError::read(&e),
+                })?;
         match encrypted_data {
-          Some(mut encrypted_data)=> {
-            self.encrypt_data.decrypt(&mut encrypted_data)?;
-            Ok(serde_json::from_slice(&encrypted_data).ok())
-          }
-          None=>{
-            Ok(None)
-          }
+            Some(mut encrypted_data) => {
+                self.encrypt_data.decrypt(&mut encrypted_data)?;
+                Ok(serde_json::from_slice(&encrypted_data).ok())
+            }
+            None => Ok(None),
         }
     }
 
     fn set_current_snapshot_(&self, snap: StoredSnapshot) -> StorageResult<()> {
         self.db
-            .put_cf(self.store(), b"snapshot", 
-              self.encrypt_data.encrypt(
-              serde_json::to_vec(&snap).unwrap())?.as_slice()
+            .put_cf(
+                self.store(),
+                b"snapshot",
+                self.encrypt_data
+                    .encrypt(serde_json::to_vec(&snap).unwrap())?
+                    .as_slice(),
             )
             .map_err(|e| StorageError::IO {
                 source: StorageIOError::write_snapshot(Some(snap.meta.signature()), &e),
             })?;
-        self.flush(ErrorSubject::Snapshot(Some(snap.meta.signature())), ErrorVerb::Write)?;
+        self.flush(
+            ErrorSubject::Snapshot(Some(snap.meta.signature())),
+            ErrorVerb::Write,
+        )?;
         Ok(())
     }
 
-    fn flush(&self, subject: ErrorSubject<NodeId>, verb: ErrorVerb) -> Result<(), StorageIOError<NodeId>> {
-        self.db.flush_wal(true).map_err(|e| StorageIOError::new(subject, verb, AnyError::new(&e)))?;
+    fn flush(
+        &self,
+        subject: ErrorSubject<NodeId>,
+        verb: ErrorVerb,
+    ) -> Result<(), StorageIOError<NodeId>> {
+        self.db
+            .flush_wal(true)
+            .map_err(|e| StorageIOError::new(subject, verb, AnyError::new(&e)))?;
         Ok(())
     }
 
@@ -235,7 +244,10 @@ impl RaftStateMachine<TypeConfig> for StateMachineStore {
     async fn applied_state(
         &mut self,
     ) -> Result<(Option<LogId<NodeId>>, StoredMembership<NodeId, Node>), StorageError<NodeId>> {
-        Ok((self.data.last_applied_log_id, self.data.last_membership.clone()))
+        Ok((
+            self.data.last_applied_log_id,
+            self.data.last_membership.clone(),
+        ))
     }
 
     async fn apply<I>(&mut self, entries: I) -> Result<Vec<Response>, StorageError<NodeId>>
@@ -249,15 +261,15 @@ impl RaftStateMachine<TypeConfig> for StateMachineStore {
         for ent in entries {
             self.data.last_applied_log_id = Some(ent.log_id);
 
-            let mut resp_value:Response = None;
+            let mut resp_value: Response = None;
 
             match ent.payload {
                 EntryPayload::Blank => {}
                 EntryPayload::Normal(req) => {
                     let sqlite_and_path = self.data.sqlite_and_path.read().await;
-                    let response_message=do_sql(&sqlite_and_path,req).await;
+                    let response_message = do_sql(&sqlite_and_path, req).await;
                     resp_value = Some(response_message);
-                },
+                }
                 EntryPayload::Membership(mem) => {
                     self.data.last_membership = StoredMembership::new(Some(ent.log_id), mem);
                 }
@@ -273,7 +285,9 @@ impl RaftStateMachine<TypeConfig> for StateMachineStore {
         self.clone()
     }
 
-    async fn begin_receiving_snapshot(&mut self) -> Result<Box<Cursor<Vec<u8>>>, StorageError<NodeId>> {
+    async fn begin_receiving_snapshot(
+        &mut self,
+    ) -> Result<Box<Cursor<Vec<u8>>>, StorageError<NodeId>> {
         Ok(Box::new(Cursor::new(Vec::new())))
     }
 
@@ -294,7 +308,9 @@ impl RaftStateMachine<TypeConfig> for StateMachineStore {
         Ok(())
     }
 
-    async fn get_current_snapshot(&mut self) -> Result<Option<Snapshot<TypeConfig>>, StorageError<NodeId>> {
+    async fn get_current_snapshot(
+        &mut self,
+    ) -> Result<Option<Snapshot<TypeConfig>>, StorageError<NodeId>> {
         let x = self.get_current_snapshot_()?;
         Ok(x.map(|s| Snapshot {
             meta: s.meta.clone(),
@@ -331,19 +347,25 @@ impl LogStore {
         self.db.cf_handle("logs").unwrap()
     }
 
-    fn flush(&self, subject: ErrorSubject<NodeId>, verb: ErrorVerb) -> Result<(), StorageIOError<NodeId>> {
-        self.db.flush_wal(true).map_err(|e| StorageIOError::new(subject, verb, AnyError::new(&e)))?;
+    fn flush(
+        &self,
+        subject: ErrorSubject<NodeId>,
+        verb: ErrorVerb,
+    ) -> Result<(), StorageIOError<NodeId>> {
+        self.db
+            .flush_wal(true)
+            .map_err(|e| StorageIOError::new(subject, verb, AnyError::new(&e)))?;
         Ok(())
     }
 
     fn get_last_purged_(&self) -> StorageResult<Option<LogId<u64>>> {
-        let encrypted_data=self
+        let encrypted_data = self
             .db
             .get_cf(self.store(), b"last_purged_log_id")
             .map_err(|e| StorageIOError::read(&e))?;
         if encrypted_data.is_none() {
-          return Ok(None);
-        }      
+            return Ok(None);
+        }
         let mut encrypted_data = encrypted_data.unwrap();
         self.encrypt_data.decrypt(&mut encrypted_data)?;
         Ok(serde_json::from_slice(&encrypted_data).ok())
@@ -354,9 +376,9 @@ impl LogStore {
             .put_cf(
                 self.store(),
                 b"last_purged_log_id",
-                self.encrypt_data.encrypt(
-                  serde_json::to_vec(&log_id).unwrap()
-                )?.as_slice(),
+                self.encrypt_data
+                    .encrypt(serde_json::to_vec(&log_id).unwrap())?
+                    .as_slice(),
             )
             .map_err(|e| StorageIOError::write(&e))?;
 
@@ -364,26 +386,31 @@ impl LogStore {
         Ok(())
     }
 
-    fn set_committed_(&self, committed: &Option<LogId<NodeId>>) -> Result<(), StorageIOError<NodeId>> {
-        let json = self.encrypt_data.encrypt(
-          serde_json::to_vec(committed).unwrap()
-        )?;
+    fn set_committed_(
+        &self,
+        committed: &Option<LogId<NodeId>>,
+    ) -> Result<(), StorageIOError<NodeId>> {
+        let json = self
+            .encrypt_data
+            .encrypt(serde_json::to_vec(committed).unwrap())?;
 
-        self.db.put_cf(self.store(), b"committed", json).map_err(|e| StorageIOError::write(&e))?;
+        self.db
+            .put_cf(self.store(), b"committed", json)
+            .map_err(|e| StorageIOError::write(&e))?;
 
         self.flush(ErrorSubject::Store, ErrorVerb::Write)?;
         Ok(())
     }
 
     fn get_committed_(&self) -> StorageResult<Option<LogId<NodeId>>> {
-        let encrypted_data=self
-            .db
-            .get_cf(self.store(), b"committed")
-            .map_err(|e| StorageError::IO {
-                source: StorageIOError::read(&e),
-            })?;
+        let encrypted_data =
+            self.db
+                .get_cf(self.store(), b"committed")
+                .map_err(|e| StorageError::IO {
+                    source: StorageIOError::read(&e),
+                })?;
         if encrypted_data.is_none() {
-          return Ok(None);
+            return Ok(None);
         }
         let mut encrypted_data = encrypted_data.unwrap();
         self.encrypt_data.decrypt(&mut encrypted_data)?;
@@ -392,10 +419,11 @@ impl LogStore {
 
     fn set_vote_(&self, vote: &Vote<NodeId>) -> StorageResult<()> {
         self.db
-            .put_cf(self.store(), b"vote",
-              self.encrypt_data.encrypt(
-                serde_json::to_vec(vote).unwrap()
-              )?
+            .put_cf(
+                self.store(),
+                b"vote",
+                self.encrypt_data
+                    .encrypt(serde_json::to_vec(vote).unwrap())?,
             )
             .map_err(|e| StorageError::IO {
                 source: StorageIOError::write_vote(&e),
@@ -406,18 +434,18 @@ impl LogStore {
     }
 
     fn get_vote_(&self) -> StorageResult<Option<Vote<NodeId>>> {
-      let encrypted_data=self
-          .db
-          .get_cf(self.store(), b"vote")
-          .map_err(|e| StorageError::IO {
-              source: StorageIOError::write_vote(&e),
-          })?;
-      if encrypted_data.is_none() {
-        return Ok(None);
-      }
-      let mut encrypted_data = encrypted_data.unwrap();
-      self.encrypt_data.decrypt(&mut encrypted_data)?;
-      Ok(serde_json::from_slice(&encrypted_data).ok())
+        let encrypted_data =
+            self.db
+                .get_cf(self.store(), b"vote")
+                .map_err(|e| StorageError::IO {
+                    source: StorageIOError::write_vote(&e),
+                })?;
+        if encrypted_data.is_none() {
+            return Ok(None);
+        }
+        let mut encrypted_data = encrypted_data.unwrap();
+        self.encrypt_data.decrypt(&mut encrypted_data)?;
+        Ok(serde_json::from_slice(&encrypted_data).ok())
     }
 }
 
@@ -432,7 +460,10 @@ impl RaftLogReader<TypeConfig> for LogStore {
             std::ops::Bound::Unbounded => id_to_bin(0),
         };
         self.db
-            .iterator_cf(self.logs(), rocksdb::IteratorMode::From(&start, Direction::Forward))
+            .iterator_cf(
+                self.logs(),
+                rocksdb::IteratorMode::From(&start, Direction::Forward),
+            )
             .map(|res| {
                 let (id, val) = res.unwrap();
                 /*
@@ -442,21 +473,14 @@ impl RaftLogReader<TypeConfig> for LogStore {
                 };
                 */
                 let mut val = val.into_vec();
-                let entry: StorageResult<Entry<_>> = 
-                  
-                  match self.encrypt_data.decrypt(&mut val) {
-                    Ok(_)=> {
-                      serde_json::from_slice(&val).map_err(|e| 
-                        StorageError::IO {
+                let entry: StorageResult<Entry<_>> = match self.encrypt_data.decrypt(&mut val) {
+                    Ok(_) => serde_json::from_slice(&val).map_err(|e| StorageError::IO {
                         source: StorageIOError::read_logs(&e),
-                      })
-                    }
-                    Err(err)=> {
-                      Err(StorageError::IO {
+                    }),
+                    Err(err) => Err(StorageError::IO {
                         source: StorageIOError::read_logs(&err),
-                      })
-                    }
-                  };
+                    }),
+                };
                 //tracing::error!("log _entry json:{}",String::from_utf8_lossy(&val));
                 /*
                 let entry: StorageResult<Entry<_>> = serde_json::from_slice(&val).map_err(|e| StorageError::IO {
@@ -465,7 +489,7 @@ impl RaftLogReader<TypeConfig> for LogStore {
                 */
                 let id = bin_to_id(&id);
                 if let Err(err) = &entry {
-                  tracing::error!("{}",err);
+                    tracing::error!("{}", err);
                 }
                 assert_eq!(Ok(id), entry.as_ref().map(|e| e.log_id.index));
                 (id, entry)
@@ -480,18 +504,21 @@ impl RaftLogStorage<TypeConfig> for LogStore {
     type LogReader = Self;
 
     async fn get_log_state(&mut self) -> StorageResult<LogState<TypeConfig>> {
-        let last = self.db.iterator_cf(self.logs(), rocksdb::IteratorMode::End).next().and_then(|res| {
-            let (_, ent) = res.unwrap();
-            let mut ent = ent.into_vec();
-            match self.encrypt_data.decrypt(&mut ent) {
-              Ok(_)=> {
-                Some(Ok(serde_json::from_slice::<Entry<TypeConfig>>(&ent).ok()?.log_id))
-              }
-              Err(err)=>return Some(Err::<_,StorageError<NodeId>>(err.into())),
-            }
-            
-        });
-      
+        let last = self
+            .db
+            .iterator_cf(self.logs(), rocksdb::IteratorMode::End)
+            .next()
+            .and_then(|res| {
+                let (_, ent) = res.unwrap();
+                let mut ent = ent.into_vec();
+                match self.encrypt_data.decrypt(&mut ent) {
+                    Ok(_) => Some(Ok(serde_json::from_slice::<Entry<TypeConfig>>(&ent)
+                        .ok()?
+                        .log_id)),
+                    Err(err) => return Some(Err::<_, StorageError<NodeId>>(err.into())),
+                }
+            });
+
         let last_purged_log_id = self.get_last_purged_()?;
 
         let last_log_id = match last {
@@ -504,7 +531,10 @@ impl RaftLogStorage<TypeConfig> for LogStore {
         })
     }
 
-    async fn save_committed(&mut self, _committed: Option<LogId<NodeId>>) -> Result<(), StorageError<NodeId>> {
+    async fn save_committed(
+        &mut self,
+        _committed: Option<LogId<NodeId>>,
+    ) -> Result<(), StorageError<NodeId>> {
         self.set_committed_(&_committed)?;
         Ok(())
     }
@@ -536,7 +566,9 @@ impl RaftLogStorage<TypeConfig> for LogStore {
                 .put_cf(
                     self.logs(),
                     id,
-                    self.encrypt_data.encrypt(serde_json::to_vec(&entry).map_err(|e| StorageIOError::write_logs(&e))?)?,
+                    self.encrypt_data.encrypt(
+                        serde_json::to_vec(&entry).map_err(|e| StorageIOError::write_logs(&e))?,
+                    )?,
                 )
                 .map_err(|e| StorageIOError::write_logs(&e))?;
         }
@@ -552,7 +584,9 @@ impl RaftLogStorage<TypeConfig> for LogStore {
 
         let from = id_to_bin(log_id.index);
         let to = id_to_bin(0xff_ff_ff_ff_ff_ff_ff_ff);
-        self.db.delete_range_cf(self.logs(), &from, &to).map_err(|e| StorageIOError::write_logs(&e).into())
+        self.db
+            .delete_range_cf(self.logs(), &from, &to)
+            .map_err(|e| StorageIOError::write_logs(&e).into())
     }
 
     #[tracing::instrument(level = "debug", skip(self))]
@@ -562,7 +596,9 @@ impl RaftLogStorage<TypeConfig> for LogStore {
         self.set_last_purged_(log_id)?;
         let from = id_to_bin(0);
         let to = id_to_bin(log_id.index + 1);
-        self.db.delete_range_cf(self.logs(), &from, &to).map_err(|e| StorageIOError::write_logs(&e).into())
+        self.db
+            .delete_range_cf(self.logs(), &from, &to)
+            .map_err(|e| StorageIOError::write_logs(&e).into())
     }
 
     async fn get_log_reader(&mut self) -> Self::LogReader {
@@ -570,60 +606,71 @@ impl RaftLogStorage<TypeConfig> for LogStore {
     }
 }
 
-pub async fn init_sqlite_connection( db_url: &str)-> Result<SqlitePool,sqlx::Error> {
-  if !Sqlite::database_exists(db_url).await.unwrap_or(false) {
-    Sqlite::create_database(db_url).await?;
-  }
-  let pool = SqlitePool::connect(db_url).await?;
-  Ok(pool)
+pub async fn init_sqlite_connection(db_url: &str) -> Result<SqlitePool, sqlx::Error> {
+    if !Sqlite::database_exists(db_url).await.unwrap_or(false) {
+        Sqlite::create_database(db_url).await?;
+    }
+    let pool = SqlitePool::connect(db_url).await?;
+    Ok(pool)
 }
 
-pub(crate) async fn new_storage<P: AsRef<Path>>(rocksdb_path: P,
-  sqlite_path: P,
-#[cfg(feature = "sqlcipher")]  
-  key: Option<String>,
-  encrypt_data: Option<Arc<Box<dyn EncryptData>>>,
-  ) -> Result<(LogStore, StateMachineStore),std::io::Error> {
+pub(crate) async fn new_storage<P: AsRef<Path>>(
+    rocksdb_path: P,
+    sqlite_path: P,
+    #[cfg(feature = "sqlcipher")] key: Option<String>,
+    encrypt_data: Option<Arc<Box<dyn EncryptData>>>,
+) -> Result<(LogStore, StateMachineStore), std::io::Error> {
     let sqlite_path = {
-      #[cfg(feature = "sqlcipher")]  
-      {
-        if let Some(key) = key {
-          let url=PathBuf::from(sqlite_path.as_ref().to_str().unwrap().to_string() + &format!("?key=\"{}\"",key));
-          tracing::error!("db url: {}",url.display());
-          url
-        } else {
-          sqlite_path.as_ref().to_path_buf()
+        #[cfg(feature = "sqlcipher")]
+        {
+            if let Some(key) = key {
+                let url = PathBuf::from(
+                    sqlite_path.as_ref().to_str().unwrap().to_string()
+                        + &format!("?key=\"{}\"", key),
+                );
+                tracing::error!("db url: {}", url.display());
+                url
+            } else {
+                sqlite_path.as_ref().to_path_buf()
+            }
         }
-      }
-      #[cfg(not(feature = "sqlcipher"))]  
-      {
-        sqlite_path.to_path_buf()
-      }
+        #[cfg(not(feature = "sqlcipher"))]
+        {
+            sqlite_path.to_path_buf()
+        }
     };
     let mut db_opts = Options::default();
-    
+
     db_opts.create_missing_column_families(true);
-    
+
     db_opts.create_if_missing(true);
-    
+
     let store = ColumnFamilyDescriptor::new("store", Options::default());
     let logs = ColumnFamilyDescriptor::new("logs", Options::default());
-    
+
     let db = DB::open_cf_descriptors(&db_opts, rocksdb_path, vec![store, logs]).unwrap();
-    
+
     let db = Arc::new(db);
-    
+
     let pool = init_sqlite_connection(sqlite_path.to_str().unwrap()).await;
     if let Err(err) = &pool {
-      return Err(std::io::Error::new(std::io::ErrorKind::Other , format!("{}",err).as_str()));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("{}", err).as_str(),
+        ));
     }
     let pool = pool.unwrap();
     let sqlite_and_path = Arc::new(RwLock::new(SqliteAndPath {
-      pool,
-      path : sqlite_path.clone(),
+        pool,
+        path: sqlite_path.clone(),
     }));
-    let log_store = LogStore { db: db.clone() , encrypt_data: encrypt_data.clone() };
-    let sm_store = StateMachineStore::new(db, sqlite_and_path,encrypt_data).await.unwrap();
-    
+    let log_store = LogStore {
+        db: db.clone(),
+        encrypt_data: encrypt_data.clone(),
+    };
+    let sm_store = StateMachineStore::new(db, sqlite_and_path, encrypt_data)
+        .await
+        .unwrap();
+
     Ok((log_store, sm_store))
 }

@@ -6,9 +6,9 @@ use std::collections::HashMap;
 use crate::service::AsyncHandler;
 
 #[cfg(any(feature = "client", feature = "server"))]
-use flume::Sender;
-#[cfg(any(feature = "client", feature = "server"))]
 use crate::error::Error;
+#[cfg(any(feature = "client", feature = "server"))]
+use flume::Sender;
 
 #[cfg(any(feature = "client", feature = "server"))]
 pub(crate) mod engine;
@@ -98,9 +98,7 @@ pub(crate) trait Reader {
         Err(error)
     }
 
-    async fn op(
-        &mut self,
-    ) -> Option<Result<Self::BrokerItem, Error>>;
+    async fn op(&mut self) -> Option<Result<Self::BrokerItem, Error>>;
 }
 
 #[cfg(any(feature = "client", feature = "server"))]
@@ -112,10 +110,7 @@ pub(crate) trait Writer {
         Err(error)
     }
 
-    async fn op(
-        &mut self,
-        item: Self::Item,
-    ) -> Result<Running, Error>;
+    async fn op(&mut self, item: Self::Item) -> Result<Running, Error>;
 }
 
 #[cfg(any(feature = "client", feature = "server"))]

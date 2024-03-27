@@ -15,7 +15,7 @@ cfg_if::cfg_if! {
         use std::collections::HashMap;
         use async_trait::async_trait;
         use flume::Sender;
-        
+
         use crate::util::Broker;
         use crate::server::pubsub::PubSubResponder;
 
@@ -85,7 +85,7 @@ pub(crate) enum ServerBrokerItem {
 pub(crate) enum BrokerState {
     Started,
     Ending,
-    Ended
+    Ended,
 }
 
 #[cfg(not(feature = "http_actix_web"))]
@@ -250,7 +250,9 @@ impl Broker for ServerBroker {
                 method,
                 duration,
                 deserializer,
-            } => self.handle_request(tx, call, id, method, duration, deserializer).map(|_| None),
+            } => self
+                .handle_request(tx, call, id, method, duration, deserializer)
+                .map(|_| None),
             ServerBrokerItem::Response { id, result } => {
                 Ok(Some(self.handle_response(id, result).await))
             }
@@ -261,17 +263,20 @@ impl Broker for ServerBroker {
             ServerBrokerItem::Subscribe { id, topic } => {
                 self.handle_subscribe(tx, id, topic).await.map(|_| None)
             }
-            ServerBrokerItem::Unsubscribe { id, topic } => self.handle_unsubscribe(id, topic).await.map(|_| None),
+            ServerBrokerItem::Unsubscribe { id, topic } => {
+                self.handle_unsubscribe(id, topic).await.map(|_| None)
+            }
             ServerBrokerItem::Publication {
                 seq_id,
                 topic,
                 content,
             } => {
-                let item = self.handle_publication(seq_id, topic, content)
-                    .await;
+                let item = self.handle_publication(seq_id, topic, content).await;
                 Ok(Some(item))
             }
-            ServerBrokerItem::InboundAck { seq_id } => self.handle_inbound_ack(seq_id).await.map(|_| None),
+            ServerBrokerItem::InboundAck { seq_id } => {
+                self.handle_inbound_ack(seq_id).await.map(|_| None)
+            }
             ServerBrokerItem::Stopping => {
                 for (_, handle) in self.executions.drain() {
                     log::debug!("Stopping execution as client is disconnected");
@@ -283,12 +288,9 @@ impl Broker for ServerBroker {
 
                 self.state = BrokerState::Ending;
 
-                tx
-                    .send_async(ServerBrokerItem::Stop)
-                    .await?;
+                tx.send_async(ServerBrokerItem::Stop).await?;
 
                 Ok(Some(ServerWriterItem::Stopping))
-
             }
             ServerBrokerItem::Stop => {
                 self.state = BrokerState::Ended;
@@ -309,8 +311,7 @@ fn spawn_timed_request_execution(
     let tx = tx.clone();
     ::async_std::task::spawn(async move {
         let result = execute_timed_call(id, duration, fut).await;
-        tx
-            .send_async(ServerBrokerItem::Response { id, result })
+        tx.send_async(ServerBrokerItem::Response { id, result })
             .await
             .unwrap_or_else(|e| log::error!("{}", e));
     })
@@ -331,8 +332,7 @@ fn spawn_timed_request_execution(
     let tx = tx.clone();
     ::tokio::task::spawn(async move {
         let result = execute_timed_call(id, duration, fut).await;
-        tx
-            .send_async(ServerBrokerItem::Response { id, result })
+        tx.send_async(ServerBrokerItem::Response { id, result })
             .await
             .unwrap_or_else(|e| log::error!("{}", e));
     })

@@ -21,7 +21,8 @@ use crate::{
     message::MessageId,
     protocol::{InboundBody, OutboundBody},
     pubsub::SeqId,
-    Error, util::Broker,
+    util::Broker,
+    Error,
 };
 
 use super::{pubsub::SubscriptionItem, ResponseResult};
@@ -149,7 +150,7 @@ impl<C> ClientBroker<C> {
         duration: Duration,
         body: Box<OutboundBody>,
         resp_tx: oneshot::Sender<Result<ResponseResult, Error>>,
-    ) -> Result<Option<ClientWriterItem>, Error>{
+    ) -> Result<Option<ClientWriterItem>, Error> {
         // fetch_add returns the previous value
         let (tx, rx) = oneshot::channel();
         let fut = async move {
@@ -193,11 +194,19 @@ impl<C> ClientBroker<C> {
         Ok(Some(item))
     }
 
-    fn handle_response(&mut self, id: MessageId, result: ResponseResult) -> Result<Option<ClientWriterItem>, Error> {
+    fn handle_response(
+        &mut self,
+        id: MessageId,
+        result: ResponseResult,
+    ) -> Result<Option<ClientWriterItem>, Error> {
         if let Some(tx) = self.pending.remove(&id) {
-            tx.send(Ok(result)).map_err(|_| {
-                Error::Internal("InternalError: client failed to send response over channel".into())
-            }).map(|_| None)
+            tx.send(Ok(result))
+                .map_err(|_| {
+                    Error::Internal(
+                        "InternalError: client failed to send response over channel".into(),
+                    )
+                })
+                .map(|_| None)
         } else {
             Err(Error::Internal(
                 format!("InternalError: Response channel not found for id: {}", id).into(),
@@ -205,10 +214,7 @@ impl<C> ClientBroker<C> {
         }
     }
 
-    async fn handle_cancel(
-        &mut self,
-        id: MessageId,
-    ) -> Result<Option<ClientWriterItem>, Error> {
+    async fn handle_cancel(&mut self, id: MessageId) -> Result<Option<ClientWriterItem>, Error> {
         if let Some(tx) = self.pending.remove(&id) {
             tx.send(Err(Error::Canceled(id))).map_err(|_| {
                 Error::Internal(
@@ -314,9 +320,11 @@ impl<C> ClientBroker<C> {
 
     fn handle_inbound_ack(&mut self, id: MessageId) -> Result<Option<ClientWriterItem>, Error> {
         if let Some(tx) = self.pending_acks.remove(&id) {
-            tx.send(()).map_err(|_| {
-                Error::Internal("InternalError: Failed to send Ack to Ack timeout task".into())
-            }).map(|_| None)
+            tx.send(())
+                .map_err(|_| {
+                    Error::Internal("InternalError: Failed to send Ack to Ack timeout task".into())
+                })
+                .map(|_| None)
         } else {
             Err(Error::Internal(
                 format!(
@@ -351,13 +359,14 @@ impl<C> ClientBroker<C> {
         }
     }
 
-    async fn handle_stopping(&mut self, tx: &Sender<ClientBrokerItem>) -> Result<Option<ClientWriterItem>, Error> {
+    async fn handle_stopping(
+        &mut self,
+        tx: &Sender<ClientBrokerItem>,
+    ) -> Result<Option<ClientWriterItem>, Error> {
         match self.state {
             ClientBrokerState::Started => self.state = ClientBrokerState::Stopping,
             ClientBrokerState::Stopping => self.state = ClientBrokerState::Stopped,
-            _ => {
-                return Ok(None)
-            }
+            _ => return Ok(None),
         }
 
         tx.send_async(ClientBrokerItem::Stop).await?;
@@ -393,9 +402,8 @@ impl<C: Marshal + Send> ClientBroker<C> {
     }
 }
 
-
 #[async_trait]
-impl<C: Marshal + Send> Broker for  ClientBroker<C> {
+impl<C: Marshal + Send> Broker for ClientBroker<C> {
     type Item = ClientBrokerItem;
     type WriterItem = ClientWriterItem;
 
@@ -417,18 +425,13 @@ impl<C: Marshal + Send> Broker for  ClientBroker<C> {
             }
             ClientBrokerItem::Response { id, result } => self.handle_response(id, result),
             ClientBrokerItem::Cancel(id) => self.handle_cancel(id).await,
-            ClientBrokerItem::Publish { topic, body } => {
-                self.handle_publish(topic, body).await
-            }
+            ClientBrokerItem::Publish { topic, body } => self.handle_publish(topic, body).await,
             ClientBrokerItem::PublishRetry {
                 count,
                 id,
                 topic,
                 body,
-            } => {
-                self.handle_publish_retry(tx, count, id, topic, body)
-                    .await
-            }
+            } => self.handle_publish_retry(tx, count, id, topic, body).await,
             ClientBrokerItem::Subscribe { topic, item_sink } => {
                 self.handle_subscribe(topic, item_sink).await
             }
@@ -436,9 +439,7 @@ impl<C: Marshal + Send> Broker for  ClientBroker<C> {
                 topic,
                 new_item_sink,
             } => self.handle_new_local_subscriber(topic, new_item_sink),
-            ClientBrokerItem::Unsubscribe { topic } => {
-                self.handle_unsubscribe(topic).await
-            }
+            ClientBrokerItem::Unsubscribe { topic } => self.handle_unsubscribe(topic).await,
             ClientBrokerItem::Subscription { id, topic, item } => {
                 self.handle_subscription(id, topic, item).await
             }
