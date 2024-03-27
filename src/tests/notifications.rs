@@ -31,7 +31,12 @@ fn do_notifications(test_name: &str,
             .into(),
             vec![],
         );
-        let response = client.sql(&message).await.unwrap();
+        let response = client.sql_with_retries_and_delay(&message,
+          LEADER_VACATION_RETRIES,
+          DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+        ).await.unwrap();
+        
+        
 
         let message = response.data.unwrap();
         match message {
@@ -44,7 +49,10 @@ fn do_notifications(test_name: &str,
             "INSERT INTO _test_user_ (name,birth_date) VALUES (?,?)".into(),
             vec![name.into(), birth_date.into()],
         );
-        let response = client.sql(&message).await.unwrap();
+        let response = client.sql_with_retries_and_delay(&message,
+          LEADER_VACATION_RETRIES,
+          DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+        ).await.unwrap();
         let message = response.data.unwrap();
         match message {
             MessageResponse::Rows(rows) => assert!(rows.len() == 0),
@@ -78,7 +86,10 @@ fn do_notifications(test_name: &str,
             "DELETE FROM _test_user_ WHERE name = ?".into(),
             vec![name.into()],
         );
-        let response = client.sql(&message).await.unwrap();
+        let response = client.sql_with_retries_and_delay(&message,
+          LEADER_VACATION_RETRIES,
+          DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+        ).await.unwrap();
         let message = response.data.unwrap();
         match message {
             MessageResponse::Rows(rows) => assert!(rows.len() == 0),
@@ -136,7 +147,10 @@ fn do_notifications2(test_name: &str,
               .into(),
               vec![],
           );
-          let response = client.sql(&message).await.unwrap();
+          let response = client.sql_with_retries_and_delay(&message,
+          LEADER_VACATION_RETRIES,
+          DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+        ).await.unwrap();
 
           let message = response.data.unwrap();
           match message {
@@ -149,7 +163,10 @@ fn do_notifications2(test_name: &str,
               "INSERT INTO _test_user_ (name,birth_date) VALUES (?,?)".into(),
               vec![name.into(), birth_date.into()],
           );
-          let response = client.sql(&message).await.unwrap();
+          let response = client.sql_with_retries_and_delay(&message,
+            LEADER_VACATION_RETRIES,
+            DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+          ).await.unwrap();
           let message = response.data.unwrap();
           match message {
               MessageResponse::Rows(rows) => assert!(rows.len() == 0),
@@ -183,7 +200,10 @@ fn do_notifications2(test_name: &str,
               "DELETE FROM _test_user_ WHERE name = ?".into(),
               vec![name.into()],
           );
-          let response = client.sql(&message).await.unwrap();
+          let response = client.sql_with_retries_and_delay(&message,
+            LEADER_VACATION_RETRIES,
+            DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+          ).await.unwrap();
           let message = response.data.unwrap();
           match message {
               MessageResponse::Rows(rows) => assert!(rows.len() == 0),

@@ -38,10 +38,15 @@ pub struct Opt {
 
     #[clap(long)]
     notifications_addr: Option<String>,
+    
+    #[clap(long,action = clap::ArgAction::SetTrue)]
+    test_node: Option<bool>,
+
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    
     // Setup the logger
     /*
     tracing_subscriber::fmt()
@@ -72,6 +77,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Parse the parameters passed by arguments.
     let options = Opt::parse();
+
+    if let Some(true) = options.test_node {
+      rxqlite_common::IN_TEST.store(true,rxqlite_common::Ordering::Relaxed);
+    }
 
     let base_path = std::path::PathBuf::from(format!("data-{}", options.id));
 

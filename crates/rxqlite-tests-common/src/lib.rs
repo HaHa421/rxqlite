@@ -117,6 +117,7 @@ impl TestClusterManager {
                 //.stderr(Stdio::null())
                 //.stdout(Stdio::null())
                 //.env_clear()
+                .arg("--test-node")
                 .arg("--id")
                 .arg(&(i + 1).to_string())
                 .arg("--http-addr")

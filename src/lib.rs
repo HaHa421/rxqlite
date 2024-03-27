@@ -11,8 +11,13 @@ use std::sync::Arc;
 
 use openraft::Config;
 use openraft::TokioRuntime;
-use tokio::net::TcpListener;
+//use tokio::net::TcpListener;
+use tokio::net::lookup_host;
+use tokio::net::TcpSocket;
+use futures::TryStreamExt;
 use tokio::task;
+use tokio_stream::wrappers::TcpListenerStream;
+use tokio_rustls::TlsAcceptor;
 
 use crate::app::App;
 use crate::network::api;
@@ -36,8 +41,8 @@ pub mod notifications;
 pub use rxqlite_common::RSQliteClientTlsConfig;
 use rxqlite_common::RSQliteNodeTlsConfig;
 use sqlite_store as store;
-use std::net::SocketAddr;
-use std::str::FromStr;
+//use std::net::SocketAddr;
+//use std::str::FromStr;
 use warp::Filter;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -287,7 +292,7 @@ where
         .with_no_client_auth();
         let private_key = private_key.unwrap();
         let notification_config =
-            config_builder.with_single_cert(certs.clone(), private_key.clone_key().into())?;
+            config_builder.with_single_cert(certs.clone(), private_key.clone_key().into()).unwrap();
         let notifications_addr = instance_params.notifications_addr.clone();
 
         let _ = task::spawn(async move {
@@ -300,12 +305,20 @@ where
             //.with_safe_defaults()
             .with_no_client_auth();
 
-        let config = config_builder.with_single_cert(certs, private_key.into())?;
+        let config = config_builder.with_single_cert(certs.clone(), private_key.clone_key().into())?;
 
         server_builder = server_builder.register(echo_service);
         let server = server_builder.build();
-
-        let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
+        
+        let socket = TcpSocket::new_v4()?;
+        let mut rpc_addr = lookup_host(&instance_params.rpc_addr).await?;
+        socket.bind(rpc_addr.next().unwrap())?;
+        if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
+          socket.set_reuseaddr(true)?;
+        }
+        let listener = socket.listen(1024)?;
+        
+        //let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
 
         let handle = task::spawn(async move {
             server
@@ -325,8 +338,16 @@ where
 
         server_builder = server_builder.register(echo_service);
         let server = server_builder.build();
-
-        let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
+        
+        let socket = TcpSocket::new_v4()?;
+        let mut rpc_addr = lookup_host(&instance_params.rpc_addr).await?;
+        socket.bind(rpc_addr.next().unwrap())?;
+        if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
+          socket.set_reuseaddr(true)?;
+        }
+        let listener = socket.listen(1024)?;
+        
+        //let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
 
         let handle = task::spawn(async move {
             server.accept_websocket(listener).await.unwrap();
@@ -378,19 +399,79 @@ where
         .or(management_snapshot);
 
     let instance_params_ = instance_params.clone();
+    
+    let socket = TcpSocket::new_v4()?;
+    let mut http_addr = lookup_host(&instance_params_.http_addr).await?;
+    socket.bind(http_addr.next().unwrap())?;
+    if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
+      socket.set_reuseaddr(true)?;
+    }
+    let listener = socket.listen(1024)?;
+    
+        
     let _server = tokio::spawn(async move {
+      
+        
+        
         if let Some(tls_config) = instance_params_.tls_config {
+            let certs =
+            rustls_pemfile::certs(&mut BufReader::new(&mut File::open(&tls_config.cert_path)?))
+                .into_iter()
+                .filter_map(|x| x.ok())
+                .collect::<Vec<_>>();
+            let private_key = rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(&mut File::open(
+                &tls_config.key_path,
+            )?))
+            .filter_map(|x| x.ok())
+            .next();
+            if private_key.is_none() {
+                return Err(anyhow::anyhow!(
+                    "No valid certificate found in {}",
+                    tls_config.key_path
+                ));
+            }
+            let private_key = private_key.unwrap();
+            let config_builder: tokio_rustls::rustls::ConfigBuilder<_,_> = tokio_rustls::rustls::ServerConfig::builder()
+            //.with_safe_defaults()
+            .with_no_client_auth();
+
+            let config = config_builder.with_single_cert(certs, private_key.into())?;
+        
+            let acceptor = TlsAcceptor::from(Arc::new(config));
+          
+            let incoming_stream = TcpListenerStream::new(listener)
+              .map_ok(move |stream| {
+                  let acceptor = acceptor.clone();
+                  async move {
+                      let tls_stream = acceptor.accept(stream).await?;
+                      Ok::<_, std::io::Error>(tls_stream)
+                  }
+              })
+              .try_buffer_unordered(100);
+            warp::serve(routes)
+                //.run(SocketAddr::from_str(&instance_params_.http_addr).unwrap())
+                .run_incoming(incoming_stream)
+                .await;
+            /*
             warp::serve(routes)
                 .tls()
                 .cert_path(&tls_config.cert_path)
                 .key_path(&tls_config.key_path)
-                .run(SocketAddr::from_str(&instance_params_.http_addr).unwrap())
+                //.run(SocketAddr::from_str(&instance_params_.http_addr).unwrap())
+                .run_incoming(incoming_stream)
                 .await;
+                
+            */
+            
         } else {
+            let incoming_stream = TcpListenerStream::new(listener);
             warp::serve(routes)
-                .run(SocketAddr::from_str(&instance_params_.http_addr).unwrap())
+                //.run(SocketAddr::from_str(&instance_params_.http_addr).unwrap())
+                .run_incoming(incoming_stream)
                 .await;
+            
         }
+        Ok::<(),anyhow::Error>(())
     });
 
     Ok((app, handle))

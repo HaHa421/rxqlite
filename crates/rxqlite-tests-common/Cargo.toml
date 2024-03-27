@@ -1,6 +1,6 @@
 [package]
 name = "rxqlite-tests-common"
-version = "0.1.4"
+version = "0.1.5"
 
 
 edition = "2021"
@@ -17,6 +17,6 @@ repository = "https://github.com/HaHa421/rxqlite"
 
 [dependencies]
 anyhow = "1"
-rxqlite-common = { version = "0.1.1" }
+rxqlite-common = { version = "0.1.2" }
 rcgen="0.12"
 state = { version = "0.6" , features = [ "tls" ]}

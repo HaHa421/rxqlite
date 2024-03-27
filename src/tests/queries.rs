@@ -28,7 +28,10 @@ fn do_simple_query(test_name: &str, tls_config: Option<TestTlsConfig>) {
             .into(),
             vec![],
         );
-        let response = client.sql(&message).await.unwrap();
+        let response = client.sql_with_retries_and_delay(&message,
+            LEADER_VACATION_RETRIES,
+            DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+          ).await.unwrap();
 
         let message = response.data.unwrap();
         match message {
@@ -41,7 +44,10 @@ fn do_simple_query(test_name: &str, tls_config: Option<TestTlsConfig>) {
             "INSERT INTO _test_user_ (name,birth_date) VALUES (?,?)".into(),
             vec![name.into(), birth_date.into()],
         );
-        let response = client.sql(&message).await.unwrap();
+        let response = client.sql_with_retries_and_delay(&message,
+            LEADER_VACATION_RETRIES,
+            DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+          ).await.unwrap();
         let message = response.data.unwrap();
         match message {
             MessageResponse::Rows(rows) => assert!(rows.len() == 0),
@@ -100,7 +106,10 @@ fn do_simple_query(test_name: &str, tls_config: Option<TestTlsConfig>) {
         //now check query through rxqlited
 
         let message = Message::Fetch(QUERY.into(), vec![name.into()]);
-        let response = client.sql(&message).await.unwrap();
+        let response = client.sql_with_retries_and_delay(&message,
+            LEADER_VACATION_RETRIES,
+            DELAY_BETWEEN_LEADER_VACATION_RETRIES,
+          ).await.unwrap();
         let message = response.data.unwrap();
         match message {
             MessageResponse::Rows(rows) => {

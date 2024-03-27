@@ -344,6 +344,46 @@ impl RXQLiteClient {
     ) -> Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>> {
         self.send_rpc_to_leader("api/sql", Some(req)).await
     }
+    
+    pub async fn sql_with_retries_and_delay(
+        &self,
+        req: &Request,
+        mut retries: usize,
+        delay_between_retries: Duration,
+    ) -> Result<typ::ClientWriteResponse, typ::RPCError<typ::ClientWriteError>> {
+        retries += 1;
+        loop {
+          match self.send_rpc_to_leader("api/sql", Some(req)).await {
+            Ok(res)=>return Ok(res),
+            Err(rpc_err)=> {
+              if let RPCError::RemoteError(remote_err) = &rpc_err {
+                let raft_err: &typ::RaftError<_> = &remote_err.source;
+
+                if let Some(typ::ForwardToLeader {
+                    leader_id,   //: Some(leader_id),
+                    leader_node : _, //: Some(leader_node),
+                    ..
+                }) = raft_err.forward_to_leader() {
+                  if leader_id.is_some() {
+                    return Err(rpc_err);
+                  } else {
+                    retries-=1;
+                    if retries == 0 {
+                      return Err(rpc_err);
+                    }
+                    tokio::time::sleep(delay_between_retries).await;
+                  }
+                } else {
+                  return Err(rpc_err);
+                }
+              } else {
+                return Err(rpc_err);
+              }
+            }
+          }
+        }
+    }
+    
     pub async fn consistent_sql(
         &self,
         req: &Request,

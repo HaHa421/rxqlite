@@ -26,6 +26,12 @@ const EXE_SUFFIX: &str = ".exe";
 #[cfg(not(target_os = "windows"))]
 const EXE_SUFFIX: &str = "";
 
+const DELAY_BETWEEN_LEADER_VACATION_RETRIES: tokio::time::Duration = 
+  tokio::time::Duration::from_secs(1);
+
+const LEADER_VACATION_RETRIES: usize = 5;
+
+
 pub fn get_cluster_manager(
     test_name: &str,
     instance_count: usize,

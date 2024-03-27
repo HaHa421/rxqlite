@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10] - 2024-03-27
+Improved tests
+Now tests can run clusters in parallel and restart them fast enough without failing
+
+## [0.1.9] - 2024-03-27
+Bug fixes
+
 ## [0.1.8] - 2024-03-27
 Introduced the notifcation system
 rxqlited now listens on three ports:

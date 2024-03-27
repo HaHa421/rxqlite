@@ -1,6 +1,6 @@
 # Roadmap
 
-## [0.1.10]
+## [0.1.11]
 Client authorization
 
 ## [0.1.9]

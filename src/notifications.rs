@@ -1,7 +1,10 @@
 use super::*;
 
 //use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
+//use tokio::net::TcpListener;
+use tokio::net::TcpSocket;
+use tokio::net::lookup_host;
+
 use tokio_rustls::TlsAcceptor;
 //use tokio::net::TcpStream;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
@@ -97,8 +100,17 @@ pub async fn start_notification_server_tls(
     config: tokio_rustls::rustls::ServerConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let acceptor = TlsAcceptor::from(Arc::new(config));
-    let listener = TcpListener::bind(&notification_address).await?;
-
+    //let listener = TcpListener::bind(&notification_address).await?;
+    
+    let socket = TcpSocket::new_v4()?;
+    let mut notification_address = lookup_host(&notification_address).await?;
+    socket.bind(notification_address.next().unwrap())?;
+    if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
+      socket.set_reuseaddr(true)?;
+    }
+    let listener = socket.listen(1024)?;
+    
+    
     loop {
         let (stream, _) = listener.accept().await?;
         let tls_stream = acceptor.accept(stream).await?;
@@ -113,8 +125,15 @@ pub async fn start_notification_server_tls(
 pub async fn start_notification_server(
     notification_address: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind(&notification_address).await?;
-
+    //let listener = TcpListener::bind(&notification_address).await?;
+    let socket = TcpSocket::new_v4()?;
+    let mut notification_address = lookup_host(&notification_address).await?;
+    socket.bind(notification_address.next().unwrap())?;
+    
+    if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
+      socket.set_reuseaddr(true)?;
+    }
+    let listener = socket.listen(1024)?;
     loop {
         let (stream, _) = listener.accept().await?;
         tokio::spawn(async move {

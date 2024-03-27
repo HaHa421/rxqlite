@@ -15,7 +15,7 @@ repository = "https://github.com/HaHa421/rxqlite"
 
 
 [dependencies]
-rxqlite-common = { version = "0.1" , path = "../rxqlite-common" }
+rxqlite-common = { version = "0.1.2" , path = "../rxqlite-common" }
 sqlparser=  "0.44"
 anyhow = "1"
 
