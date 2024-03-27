@@ -65,7 +65,7 @@ jobs:
 
     - name: Install Windows SDK(Windows)
       if: matrix.os == 'windows-latest'
-      run: choco install visualstudio2022-workload-manageddesktop --params "--add Microsoft.VisualStudio.Component.Windows11SDK.22621" -y
+      run: choco install visualstudio2022-workload-data --params "--add Microsoft.VisualStudio.Component.Windows11SDK.22621" -y
       
     
     - name: Install Clang(Windows)
