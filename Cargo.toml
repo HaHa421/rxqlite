@@ -39,7 +39,6 @@ rxqlite-sqlx-common = { version = "0.1" , path = "crates/rxqlite-sqlx-common" , 
 openraft = { version = "0.9", features = ["serde" , "storage-v2"] }
 
 rustls-pemfile = "2"
-#rustls = {version = "0.20" , features = [ "dangerous_configuration" ] }
 rustls = {version = "0.22" }
 tokio = { version = "1.35.1", features = ["full"] }
 byteorder = "1.4.3"
