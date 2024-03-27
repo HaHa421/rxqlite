@@ -192,13 +192,13 @@ jobs:
       run: echo "Latest tag is ${{ env.TAG }}"
       
     - name: Download Windows Artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: "."
         name: Windows-artifact
     
     - name: Download Ubuntu Artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: "."
         name: Linux-artifact
