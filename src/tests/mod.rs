@@ -26,6 +26,9 @@ const EXE_SUFFIX: &str = ".exe";
 #[cfg(not(target_os = "windows"))]
 const EXE_SUFFIX: &str = "";
 
+#[cfg(target_os = "linux")]
+const DELAY_BETWEEN_KILL_AND_START: tokio::time::Duration= tokio::time::Duration::from_secs(90);
+
 const DELAY_BETWEEN_LEADER_VACATION_RETRIES: tokio::time::Duration = 
   tokio::time::Duration::from_secs(1);
 

@@ -127,7 +127,12 @@ fn do_notifications2(test_name: &str,
         //const QUERY: &str ="SELECT name,birth_date from _test_user_ where name = ?";
         let mut tm = TestManager::new(test_name, 3, tls_config);
         //tm.keep_temp_directories=keep_temp_directories;
+        #[cfg(not(target_os = "linux"))]
         const MAX_ITER:usize = 5;
+        // on linux we wait DELAY_BETWEEN_KILL_AND_START
+        // for the OS to let us reuse node sockets (https://github.com/HaHa421/rxqlite/issues/8)
+        #[cfg(target_os = "linux")]
+        const MAX_ITER:usize = 2;
         for i in 0..MAX_ITER{
           tm.wait_for_cluster_established(1, 60).await.unwrap();
           let notifications_addr = tm.instances.get(&1).unwrap().notifications_addr.clone();
@@ -234,6 +239,10 @@ fn do_notifications2(test_name: &str,
               .unwrap();
           if i < MAX_ITER - 1 {
             tm.kill_all().unwrap();
+            #[cfg(target_os = "linux")]
+            {
+               tokio::time::sleep(DELAY_BETWEEN_KILL_AND_START).await;
+            }
             tm.start().unwrap();
           }
         }

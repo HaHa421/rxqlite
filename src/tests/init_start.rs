@@ -18,6 +18,10 @@ fn start_cluster() {
         let mut tm = TestManager::new("start_cluster", 3, None);
         tm.wait_for_cluster_established(1, 60).await.unwrap();
         tm.kill_all().unwrap();
+        #[cfg(target_os = "linux")]
+        {
+           tokio::time::sleep(DELAY_BETWEEN_KILL_AND_START).await;
+        }
         tm.start().unwrap();
         tm.wait_for_cluster_established(1, 60).await.unwrap();
     });
@@ -50,6 +54,10 @@ fn start_cluster_insecure_ssl() {
         //tm.keep_temp_directories=true;
         tm.wait_for_cluster_established(1, 60).await.unwrap();
         tm.kill_all().unwrap();
+        #[cfg(target_os = "linux")]
+        {
+           tokio::time::sleep(DELAY_BETWEEN_KILL_AND_START).await;
+        }
         tm.start().unwrap();
         tm.wait_for_cluster_established(1, 60).await.unwrap();
     });
