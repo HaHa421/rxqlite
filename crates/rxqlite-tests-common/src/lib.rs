@@ -200,7 +200,9 @@ impl TestClusterManager {
         for (node_id, instance) in self.instances.iter_mut() {
             let mut cmd = Command::new(&self.executable);
 
-            cmd.arg("--id")
+            cmd
+              .arg("--test-node")
+              .arg("--id")
                 .arg(&node_id.to_string())
                 .current_dir(&self.working_directory);
             let child = cmd.spawn()?;

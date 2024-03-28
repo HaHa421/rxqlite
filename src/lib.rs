@@ -315,7 +315,10 @@ where
         socket.bind(rpc_addr.next().unwrap())?;
         if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
           socket.set_reuseaddr(true)?;
+          #[cfg(target_os = "linux")]
+          socket.set_reuseport(true)?;
         }
+        
         let listener = socket.listen(1024)?;
         
         //let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
@@ -344,7 +347,10 @@ where
         socket.bind(rpc_addr.next().unwrap())?;
         if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
           socket.set_reuseaddr(true)?;
+          #[cfg(target_os = "linux")]
+          socket.set_reuseport(true)?;
         }
+        
         let listener = socket.listen(1024)?;
         
         //let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
@@ -405,7 +411,10 @@ where
     socket.bind(http_addr.next().unwrap())?;
     if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
       socket.set_reuseaddr(true)?;
+      #[cfg(target_os = "linux")]
+      socket.set_reuseport(true)?;
     }
+    
     let listener = socket.listen(1024)?;
     
         

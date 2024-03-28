@@ -107,7 +107,10 @@ pub async fn start_notification_server_tls(
     socket.bind(notification_address.next().unwrap())?;
     if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
       socket.set_reuseaddr(true)?;
+      #[cfg(target_os = "linux")]
+      socket.set_reuseport(true)?;
     }
+    
     let listener = socket.listen(1024)?;
     
     
@@ -129,9 +132,10 @@ pub async fn start_notification_server(
     let socket = TcpSocket::new_v4()?;
     let mut notification_address = lookup_host(&notification_address).await?;
     socket.bind(notification_address.next().unwrap())?;
-    
     if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
       socket.set_reuseaddr(true)?;
+      #[cfg(target_os = "linux")]
+      socket.set_reuseport(true)?;
     }
     let listener = socket.listen(1024)?;
     loop {
