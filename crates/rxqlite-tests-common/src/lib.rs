@@ -3,6 +3,11 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::{/*Stdio ,*/ Child, Command};
 
+#[cfg(target_os = "linux")]
+use nix::sys::signal::{kill, Signal};
+#[cfg(target_os = "linux")]
+use nix::unistd::Pid;
+
 use std::sync::{
     atomic::{AtomicU16, Ordering},
     Arc,
@@ -175,7 +180,15 @@ impl TestClusterManager {
     pub fn kill_all(&mut self) -> anyhow::Result<()> {
         for (_, instance) in self.instances.iter_mut() {
             if let Some(child) = instance.child.as_mut() {
+#[cfg(target_os = "linux")]
+{
+              let pid = child.id() as i32;
+              kill(Pid::from_raw(pid), Signal::SIGINT)?;
+}
+#[cfg(not(target_os = "linux"))]
+{
                 child.kill()?;
+}
             }
         }
         loop {

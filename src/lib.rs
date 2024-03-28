@@ -18,6 +18,7 @@ use futures::TryStreamExt;
 use tokio::task;
 use tokio_stream::wrappers::TcpListenerStream;
 use tokio_rustls::TlsAcceptor;
+use tokio::signal;
 
 use crate::app::App;
 use crate::network::api;
@@ -324,10 +325,9 @@ where
         //let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
 
         let handle = task::spawn(async move {
-            server
+            let _= server
                 .accept_with_tls_config(listener, config)
-                .await
-                .unwrap();
+                .await;
         });
         handle
     } else {
@@ -356,7 +356,7 @@ where
         //let listener = TcpListener::bind(instance_params.rpc_addr.clone()).await?;
 
         let handle = task::spawn(async move {
-            server.accept_websocket(listener).await.unwrap();
+            let _=server.accept_websocket(listener).await;
         });
         handle
     };
@@ -596,7 +596,13 @@ where
         }
     }
 
-    _ = handle.await;
+    tokio::select! {
+      _ = handle => {
+      }
+      _ = signal::ctrl_c() => {
+        //std::process::exit(0);
+      }
+    }
     Ok(())
 }
 
@@ -618,7 +624,15 @@ where
 
     let (_, handle) = init_rxqlite(node_id, base_dir, instance_params).await?;
 
-    _ = handle.await;
+    tokio::select! {
+      _ = handle => {
+      }
+      _ = signal::ctrl_c() => {
+        //std::process::exit(0);
+      }
+    }
+
+    
     Ok(())
 }
 

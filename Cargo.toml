@@ -1,6 +1,6 @@
 [package]
 name = "rxqlite"
-version = "0.1.10"
+version = "0.1.11"
 readme = "README.md"
 
 edition = "2021"
@@ -64,7 +64,7 @@ tokio-util = { version = "0.7" , features = [ "codec" ] }
 futures-util= "0.3"
 futures = { version = "0.3.30" }
 tokio-stream = "0.1"
-rxqlite-tests-common = { version = "0.1.5" , path = "crates/rxqlite-tests-common" , optional = true }
+rxqlite-tests-common = { version = "0.1.6" , path = "crates/rxqlite-tests-common" , optional = true }
 
 
 [dependencies.sqlx]
@@ -101,7 +101,7 @@ optional = true
 
 [dev-dependencies]
 futures = { version = "0.3.30" }
-rxqlite-tests-common = { version = "0.1.5" , path = "crates/rxqlite-tests-common" }
+rxqlite-tests-common = { version = "0.1.6" , path = "crates/rxqlite-tests-common" }
 
 [features]
 default = [ "bundled-sqlcipher-vendored-openssl"  ]

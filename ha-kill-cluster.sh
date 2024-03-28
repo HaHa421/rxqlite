@@ -27,7 +27,7 @@ kill_all() {
           
       else
           set +e # killall will error if finds no process to kill
-          killall "${SERVICE}"
+          killall --signal SIGINT "${SERVICE}"
           set -e
       fi
     fi

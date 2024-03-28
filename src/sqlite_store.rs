@@ -628,7 +628,7 @@ pub(crate) async fn new_storage<P: AsRef<Path>>(
                     sqlite_path.as_ref().to_str().unwrap().to_string()
                         + &format!("?key=\"{}\"", key),
                 );
-                tracing::error!("db url: {}", url.display());
+                //tracing::error!("db url: {}", url.display());
                 url
             } else {
                 sqlite_path.as_ref().to_path_buf()
