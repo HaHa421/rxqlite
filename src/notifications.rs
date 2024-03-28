@@ -103,13 +103,14 @@ pub async fn start_notification_server_tls(
     //let listener = TcpListener::bind(&notification_address).await?;
     
     let socket = TcpSocket::new_v4()?;
-    let mut notification_address = lookup_host(&notification_address).await?;
-    socket.bind(notification_address.next().unwrap())?;
     if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
       socket.set_reuseaddr(true)?;
       #[cfg(target_os = "linux")]
       socket.set_reuseport(true)?;
     }
+    let mut notification_address = lookup_host(&notification_address).await?;
+    socket.bind(notification_address.next().unwrap())?;
+    
     
     let listener = socket.listen(1024)?;
     
@@ -130,13 +131,14 @@ pub async fn start_notification_server(
 ) -> Result<(), Box<dyn std::error::Error>> {
     //let listener = TcpListener::bind(&notification_address).await?;
     let socket = TcpSocket::new_v4()?;
-    let mut notification_address = lookup_host(&notification_address).await?;
-    socket.bind(notification_address.next().unwrap())?;
     if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
       socket.set_reuseaddr(true)?;
       #[cfg(target_os = "linux")]
       socket.set_reuseport(true)?;
     }
+    let mut notification_address = lookup_host(&notification_address).await?;
+    socket.bind(notification_address.next().unwrap())?;
+    
     let listener = socket.listen(1024)?;
     loop {
         let (stream, _) = listener.accept().await?;

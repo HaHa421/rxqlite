@@ -312,13 +312,14 @@ where
         let server = server_builder.build();
         
         let socket = TcpSocket::new_v4()?;
-        let mut rpc_addr = lookup_host(&instance_params.rpc_addr).await?;
-        socket.bind(rpc_addr.next().unwrap())?;
         if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
           socket.set_reuseaddr(true)?;
           #[cfg(target_os = "linux")]
           socket.set_reuseport(true)?;
         }
+        let mut rpc_addr = lookup_host(&instance_params.rpc_addr).await?;
+        socket.bind(rpc_addr.next().unwrap())?;
+        
         
         let listener = socket.listen(1024)?;
         
@@ -343,13 +344,14 @@ where
         let server = server_builder.build();
         
         let socket = TcpSocket::new_v4()?;
-        let mut rpc_addr = lookup_host(&instance_params.rpc_addr).await?;
-        socket.bind(rpc_addr.next().unwrap())?;
         if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
           socket.set_reuseaddr(true)?;
           #[cfg(target_os = "linux")]
           socket.set_reuseport(true)?;
         }
+        let mut rpc_addr = lookup_host(&instance_params.rpc_addr).await?;
+        socket.bind(rpc_addr.next().unwrap())?;
+        
         
         let listener = socket.listen(1024)?;
         
@@ -407,13 +409,13 @@ where
     let instance_params_ = instance_params.clone();
     
     let socket = TcpSocket::new_v4()?;
-    let mut http_addr = lookup_host(&instance_params_.http_addr).await?;
-    socket.bind(http_addr.next().unwrap())?;
     if rxqlite_common::IN_TEST.load(rxqlite_common::Ordering::Relaxed) {
       socket.set_reuseaddr(true)?;
       #[cfg(target_os = "linux")]
       socket.set_reuseport(true)?;
     }
+    let mut http_addr = lookup_host(&instance_params_.http_addr).await?;
+    socket.bind(http_addr.next().unwrap())?;
     
     let listener = socket.listen(1024)?;
     
